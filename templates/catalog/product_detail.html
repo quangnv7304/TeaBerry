@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} – TeaBerry{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="row g-5 align-items-start">
+        <div class="col-12 col-lg-6">
+            {% with primary_image=product.images.first %}
+                {% if primary_image %}
+                    <img id="main-product-image" src="{{ primary_image.image.url }}"
+                         class="img-fluid rounded-4 shadow-sm w-100 mb-3"
+                         alt="{{ primary_image.alt_text|default:product.name }}"
+                         style="height: 460px; object-fit: cover;">
+                {% elif product.image %}
+                    <img id="main-product-image" src="{{ product.image.url }}"
+                         class="img-fluid rounded-4 shadow-sm w-100 mb-3"
+                         alt="{{ product.name }}"
+                         style="height: 460px; object-fit: cover;">
+                {% else %}
+                    <div class="product-image-placeholder rounded-4 mb-3" style="height: 460px;">
+                        Chưa có ảnh sản phẩm
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if product.images.exists %}
+                <div class="row g-2">
+                    {% for product_image in product.images.all %}
+                        <div class="col-3">
+                            <button type="button" class="btn p-0 border rounded-3 w-100 product-thumbnail"
+                                    data-image-url="{{ product_image.image.url }}"
+                                    aria-label="Xem ảnh {{ forloop.counter }}">
+                                <img src="{{ product_image.image.url }}" class="img-fluid rounded-3"
+                                     alt="{{ product_image.alt_text|default:product.name }}"
+                                     style="width: 100%; height: 90px; object-fit: cover;">
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <p class="text-muted mb-2">{{ product.category.name }}</p>
+            <h1 class="fw-bold">{{ product.name }}</h1>
+            <p class="fs-3 fw-bold text-danger">
+                <span id="product-total-price">{{ product.base_price }}</span>đ
+            </p>
+            {% if product.short_description %}<p class="lead">{{ product.short_description }}</p>{% endif %}
+            {% if product.description %}<div class="mb-4">{{ product.description|linebreaks }}</div>{% endif %}
+
+            <form method="post" action="{% url 'cart:add' %}" id="add-to-cart-form">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+
+                {% if product.has_variants %}
+                    <fieldset class="mb-4">
+                        <legend class="form-label fw-semibold">Chọn kích thước</legend>
+                        <div class="d-grid gap-2">
+                            {% for variant in product.variants.all %}
+                                {% if variant.is_available %}
+                                    <label class="border rounded-3 p-3">
+                                        <input type="radio" name="variant_id" value="{{ variant.id }}"
+                                               data-price="{{ variant.price }}"
+                                               {% if variant.is_default %}checked{% endif %}
+                                               {% if not product.variants.all.0.is_default and forloop.first %}required{% endif %}>
+                                        <span class="ms-2">{{ variant.name }}</span>
+                                        <strong class="float-end">{{ variant.price }}đ</strong>
+                                    </label>
+                                {% endif %}
+                            {% empty %}
+                                <div class="alert alert-warning">Sản phẩm chưa có kích thước khả dụng.</div>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                {% endif %}
+
+                {% if product.supports_sugar %}
+                    <fieldset class="mb-4">
+                        <legend class="form-label fw-semibold">Mức đường</legend>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for product_option in product.product_options.all %}
+                                {% if product_option.option_choice.option_type == "SUGAR" and product_option.option_choice.is_active %}
+                                    <input class="btn-check" type="radio" name="sugar_choice_id"
+                                           id="sugar-{{ product_option.id }}"
+                                           value="{{ product_option.option_choice.id }}"
+                                           {% if product_option.is_default %}checked{% endif %} required>
+                                    <label class="btn btn-outline-secondary" for="sugar-{{ product_option.id }}">
+                                        {{ product_option.option_choice.label }}
+                                    </label>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                {% endif %}
+
+                {% if product.supports_ice %}
+                    <fieldset class="mb-4">
+                        <legend class="form-label fw-semibold">Mức đá</legend>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for product_option in product.product_options.all %}
+                                {% if product_option.option_choice.option_type == "ICE" and product_option.option_choice.is_active %}
+                                    <input class="btn-check" type="radio" name="ice_choice_id"
+                                           id="ice-{{ product_option.id }}"
+                                           value="{{ product_option.option_choice.id }}"
+                                           {% if product_option.is_default %}checked{% endif %} required>
+                                    <label class="btn btn-outline-secondary" for="ice-{{ product_option.id }}">
+                                        {{ product_option.option_choice.label }}
+                                    </label>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                {% endif %}
+
+                <fieldset class="mb-4">
+                    <legend class="form-label fw-semibold">Chọn topping</legend>
+                    <div class="d-grid gap-2">
+                        {% for product_topping in product.product_toppings.all %}
+                            {% if product_topping.topping.is_available %}
+                                <label class="border rounded-3 p-3">
+                                    <input type="checkbox" name="toppings"
+                                           value="{{ product_topping.topping.id }}"
+                                           data-price="{{ product_topping.topping.price }}">
+                                    <span class="ms-2">{{ product_topping.topping.name }}</span>
+                                    <strong class="float-end">+{{ product_topping.topping.price }}đ</strong>
+                                </label>
+                            {% endif %}
+                        {% empty %}
+                            <p class="text-muted mb-0">Sản phẩm này chưa có topping.</p>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div class="mb-4">
+                    <label for="note" class="form-label fw-semibold">Ghi chú</label>
+                    <textarea id="note" name="note" class="form-control" rows="2" maxlength="255"
+                              placeholder="Ví dụ: pha nhạt hơn..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="quantity" class="form-label fw-semibold">Số lượng</label>
+                    <input id="quantity" name="quantity" class="form-control" type="number"
+                           min="1" max="50" value="1" required>
+                </div>
+                <button type="submit" class="btn btn-teaberry btn-lg w-100">
+                    Thêm vào giỏ – <span id="add-to-cart-price">{{ product.base_price }}</span>đ
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const priceElement = document.getElementById("product-total-price");
+    const addToCartPrice = document.getElementById("add-to-cart-price");
+    const quantityInput = document.getElementById("quantity");
+    const variantInputs = document.querySelectorAll('input[name="variant_id"]');
+    const toppingInputs = document.querySelectorAll('input[name="toppings"]');
+    const mainProductImage = document.getElementById("main-product-image");
+
+    document.querySelectorAll(".product-thumbnail").forEach(function (button) {
+        button.addEventListener("click", function () {
+            if (mainProductImage) mainProductImage.src = button.dataset.imageUrl;
+        });
+    });
+
+    function updateTotalPrice() {
+        let basePrice = Number("{{ product.base_price }}");
+        const selectedVariant = document.querySelector('input[name="variant_id"]:checked');
+        if (selectedVariant) basePrice = Number(selectedVariant.dataset.price);
+
+        let toppingTotal = 0;
+        toppingInputs.forEach(function (input) {
+            if (input.checked) toppingTotal += Number(input.dataset.price);
+        });
+
+        const quantity = Math.max(1, Math.min(50, Number(quantityInput.value) || 1));
+        const formattedTotal = ((basePrice + toppingTotal) * quantity).toLocaleString("vi-VN");
+        priceElement.textContent = formattedTotal;
+        addToCartPrice.textContent = formattedTotal;
+    }
+
+    variantInputs.forEach(input => input.addEventListener("change", updateTotalPrice));
+    toppingInputs.forEach(input => input.addEventListener("change", updateTotalPrice));
+    quantityInput.addEventListener("input", updateTotalPrice);
+    updateTotalPrice();
+});
+</script>
+{% endblock %}

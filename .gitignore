@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+
+# Media
+media/
+staticfiles/
+
+# Environment
+.env
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Logs
+*.log
+
+# Windows
+Thumbs.db

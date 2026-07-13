@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Quản lý đơn hàng – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
+    >
+        <div>
+            <h1 class="fw-bold mb-1">
+                Quản lý đơn hàng
+            </h1>
+
+            <p class="text-muted mb-0">
+                Danh sách đơn hàng của TeaBerry.
+            </p>
+        </div>
+
+        <form method="get">
+            <select
+                name="status"
+                class="form-select"
+                onchange="this.form.submit()"
+            >
+                <option value="">
+                    Tất cả trạng thái
+                </option>
+
+                {% for value, label in status_choices %}
+                    <option
+                        value="{{ value }}"
+                        {% if selected_status == value %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="row g-3">
+        {% for order in orders %}
+            <div class="col-12">
+                <article class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div
+                            class="d-flex justify-content-between flex-wrap gap-3"
+                        >
+                            <div>
+                                <h2 class="h5">
+                                    {{ order.order_code }}
+                                </h2>
+
+                                <p class="mb-1">
+                                    {{ order.customer_name }} –
+                                    {{ order.customer_phone }}
+                                </p>
+
+                                <p class="text-muted mb-0">
+                                    {{ order.created_at|date:"H:i d/m/Y" }}
+                                </p>
+                            </div>
+
+                            <div class="text-end">
+                                <span class="badge text-bg-primary">
+                                    {{ order.get_status_display }}
+                                </span>
+
+                                <div class="fw-bold fs-5 mt-2">
+                                    {{ order.total }}d
+                                </div>
+
+                                <a
+                                    href="{% url 'orders:staff-detail' order.id %}"
+                                    class="btn btn-outline-secondary btn-sm mt-2"
+                                >
+                                    Xem don
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light border">
+                    Chưa có đơn hàng phù hợp.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ order.order_code }} – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <a
+        href="{% url 'orders:customer-list' %}"
+        class="btn btn-link px-0 mb-3"
+    >
+        ← Quay lại đơn hàng
+    </a>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            <article class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div
+                        class="d-flex justify-content-between flex-wrap gap-3"
+                    >
+                        <div>
+                            <div class="text-muted">
+                                Mã đơn hàng
+                            </div>
+
+                            <h1 class="h3">
+                                {{ order.order_code }}
+                            </h1>
+                        </div>
+
+                        <span class="badge text-bg-primary align-self-start">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    {% for item in order.items.all %}
+                        <div class="border-bottom py-3">
+                            <div
+                                class="d-flex justify-content-between gap-3"
+                            >
+                                <div>
+                                    <strong>
+                                        {{ item.quantity }} ×
+                                        {{ item.product_name }}
+                                    </strong>
+
+                                    {% if item.variant_name %}
+                                        <div class="small text-muted">
+                                            {{ item.variant_name }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.sugar_label %}
+                                        <div class="small">
+                                            Đường: {{ item.sugar_label }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.ice_label %}
+                                        <div class="small">
+                                            Đá: {{ item.ice_label }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% for topping in item.toppings %}
+                                        <div class="small">
+                                            + {{ topping.name }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <strong>
+                                    {{ item.line_total }}đ
+                                </strong>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <span>Tạm tính</span>
+                        <strong>{{ order.subtotal }}đ</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>Phí giao hàng</span>
+                        <strong>{{ order.shipping_fee }}đ</strong>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between fs-5">
+                        <strong>Tổng thanh toán</strong>
+                        <strong>{{ order.total }}đ</strong>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <aside class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">
+                        Thông tin nhận hàng
+                    </h2>
+
+                    <p class="mb-1">
+                        {{ order.customer_name }}
+                    </p>
+
+                    <p class="mb-1">
+                        {{ order.customer_phone }}
+                    </p>
+
+                    <p>
+                        {{ order.shipping_address }}
+                    </p>
+                </div>
+            </aside>
+
+            <aside class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">
+                        Tiến trình đơn
+                    </h2>
+
+                    {% for history in order.status_history.all %}
+                        <div class="border-start ps-3 pb-3">
+                            <strong>
+                                {{ history.get_new_status_display }}
+                            </strong>
+
+                            <div class="small text-muted">
+                                {{ history.created_at|date:"H:i d/m/Y" }}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">
+                            Chưa có lịch sử trạng thái.
+                        </p>
+                    {% endfor %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

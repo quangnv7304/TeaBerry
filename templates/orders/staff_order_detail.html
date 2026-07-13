@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ order.order_code }} – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <a
+        href="{% url 'orders:staff-list' %}"
+        class="btn btn-link px-0 mb-3"
+    >
+        ← Quay lại danh sách
+    </a>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            <article class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div
+                        class="d-flex justify-content-between flex-wrap gap-3"
+                    >
+                        <div>
+                            <div class="text-muted">
+                                Mã đơn
+                            </div>
+
+                            <h1 class="h3">
+                                {{ order.order_code }}
+                            </h1>
+                        </div>
+
+                        <span class="badge text-bg-primary align-self-start">
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    {% for item in order.items.all %}
+                        <div class="border-bottom py-3">
+                            <div
+                                class="d-flex justify-content-between gap-3"
+                            >
+                                <div>
+                                    <strong>
+                                        {{ item.quantity }} ×
+                                        {{ item.product_name }}
+                                    </strong>
+
+                                    {% if item.variant_name %}
+                                        <div class="small">
+                                            Size: {{ item.variant_name }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.sugar_label %}
+                                        <div class="small">
+                                            Đường: {{ item.sugar_label }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.ice_label %}
+                                        <div class="small">
+                                            Đá: {{ item.ice_label }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% for topping in item.toppings %}
+                                        <div class="small">
+                                            + {{ topping.name }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <strong>
+                                    {{ item.line_total }}d
+                                </strong>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div
+                        class="d-flex justify-content-between fs-5 mt-4"
+                    >
+                        <strong>Tổng thanh toán</strong>
+                        <strong>{{ order.total }}d</strong>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <aside class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">
+                        Thông tin giao hàng
+                    </h2>
+
+                    <p class="mb-1">
+                        <strong>{{ order.customer_name }}</strong>
+                    </p>
+
+                    <p class="mb-1">
+                        {{ order.customer_phone }}
+                    </p>
+
+                    <p>
+                        {{ order.shipping_address }}
+                    </p>
+
+                    {% if order.delivery_note %}
+                        <p class="text-muted">
+                            {{ order.delivery_note }}
+                        </p>
+                    {% endif %}
+                </div>
+            </aside>
+
+            <aside class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">
+                        Cập nhật trạng thái
+                    </h2>
+
+                    {% if order.status == "PENDING" %}
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'CONFIRMED' %}"
+                            class="mb-2"
+                        >
+                            {% csrf_token %}
+                            <button class="btn btn-success w-100">
+                                Xác nhận đơn
+                            </button>
+                        </form>
+
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'CANCELLED' %}"
+                        >
+                            {% csrf_token %}
+                            <input
+                                type="text"
+                                name="note"
+                                class="form-control mb-2"
+                                required
+                                placeholder="Lý do hủy"
+                            >
+
+                            <button class="btn btn-outline-danger w-100">
+                                H?y don
+                            </button>
+                        </form>
+
+                    {% elif order.status == "CONFIRMED" %}
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'PREPARING' %}"
+                        >
+                            {% csrf_token %}
+                            <button class="btn btn-teaberry w-100">
+                                B?t d?u pha ch?
+                            </button>
+                        </form>
+
+                    {% elif order.status == "PREPARING" %}
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'READY' %}"
+                        >
+                            {% csrf_token %}
+                            <button class="btn btn-success w-100">
+                                Đã pha xong
+                            </button>
+                        </form>
+
+                    {% elif order.status == "READY" %}
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'DELIVERING' %}"
+                        >
+                            {% csrf_token %}
+                            <button class="btn btn-primary w-100">
+                                B?t d?u giao
+                            </button>
+                        </form>
+
+                    {% elif order.status == "DELIVERING" %}
+                        <form
+                            method="post"
+                            action="{% url 'orders:staff-change-status' order.id 'COMPLETED' %}"
+                        >
+                            {% csrf_token %}
+                            <button class="btn btn-success w-100">
+                                Hoàn thành đơn
+                            </button>
+                        </form>
+
+                    {% else %}
+                        <p class="text-muted mb-0">
+                            Đơn không còn thao tác tiếp theo.
+                        </p>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

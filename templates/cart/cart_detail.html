@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Giỏ hàng – TeaBerry{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <h1 class="fw-bold mb-4">Giỏ hàng</h1>
+    {% if cart|length %}
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                {% for item in cart %}
+                    <article class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between gap-3">
+                                <div>
+                                    <h2 class="h5 mb-2">{{ item.product_name }}</h2>
+                                    {% if item.variant_name %}<p class="mb-1">Kích thước: {{ item.variant_name }}</p>{% endif %}
+                                    {% if item.sugar_label %}<p class="mb-1">Đường: {{ item.sugar_label }}</p>{% endif %}
+                                    {% if item.ice_label %}<p class="mb-1">Đá: {{ item.ice_label }}</p>{% endif %}
+                                    {% for topping in item.toppings %}<p class="mb-1">+ {{ topping.name }}</p>{% endfor %}
+                                    {% if item.note %}<p class="text-muted mb-0">Ghi chú: {{ item.note }}</p>{% endif %}
+                                </div>
+                                <strong>{{ item.line_total }}đ</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex flex-wrap gap-2 justify-content-between">
+                                <form method="post" action="{% url 'cart:item-update' item.key %}" class="d-flex gap-2">
+                                    {% csrf_token %}
+                                    <input type="number" name="quantity" min="1" max="50"
+                                           value="{{ item.quantity }}" class="form-control" style="width: 90px;" required>
+                                    <button class="btn btn-outline-secondary" type="submit">Cập nhật</button>
+                                </form>
+                                <form method="post" action="{% url 'cart:item-remove' item.key %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-outline-danger" type="submit">Xóa</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+            <div class="col-12 col-lg-4">
+                <aside class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="h5">Tóm tắt giỏ hàng</h2>
+                        <div class="d-flex justify-content-between my-3">
+                            <span>Tổng tiền</span><strong>{{ cart.get_total_price }}đ</strong>
+                        </div>
+                       <a
+                            class="btn btn-teaberry w-100"
+                            href="{% url 'orders:checkout' %}"
+                        >
+                            Tiến hành thanh toán
+                        </a>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-light border">
+            <h2 class="h5">Giỏ hàng đang trống</h2>
+            <a href="{% url 'catalog:product-list' %}" class="btn btn-teaberry mt-2">Xem menu</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

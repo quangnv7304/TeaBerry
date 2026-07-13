@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Địa chỉ của tôi – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
+    >
+        <div>
+            <h1 class="fw-bold mb-1">
+                Địa chỉ của tôi
+            </h1>
+
+            <p class="text-muted mb-0">
+                Quản lý địa chỉ nhận hàng.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'accounts:address-create' %}"
+            class="btn btn-teaberry"
+        >
+            Thêm địa chỉ
+        </a>
+    </div>
+
+    <div class="row g-3">
+        {% for address in addresses %}
+            <div class="col-12 col-lg-6">
+                <article class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div
+                            class="d-flex justify-content-between gap-3"
+                        >
+                            <div>
+                                <h2 class="h5">
+                                    {{ address.recipient_name }}
+
+                                    {% if address.label %}
+                                        <span class="text-muted">
+                                            ({{ address.label }})
+                                        </span>
+                                    {% endif %}
+                                </h2>
+
+                                <p class="mb-1">
+                                    {{ address.recipient_phone }}
+                                </p>
+
+                                <p class="mb-2">
+                                    {{ address.full_address }}
+                                </p>
+
+                                {% if address.delivery_note %}
+                                    <p class="small text-muted">
+                                        {{ address.delivery_note }}
+                                    </p>
+                                {% endif %}
+                            </div>
+
+                            {% if address.is_default %}
+                                <span
+                                    class="badge text-bg-success align-self-start"
+                                >
+                                    Mặc định
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a
+                                href="{% url 'accounts:address-update' address.id %}"
+                                class="btn btn-outline-secondary btn-sm"
+                            >
+                                Sửa
+                            </a>
+
+                            {% if not address.is_default %}
+                                <form
+                                    method="post"
+                                    action="{% url 'accounts:address-set-default' address.id %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="btn btn-outline-success btn-sm"
+                                        type="submit"
+                                    >
+                                        Đặt mặc định
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            <form
+                                method="post"
+                                action="{% url 'accounts:address-delete' address.id %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    class="btn btn-outline-danger btn-sm"
+                                    type="submit"
+                                >
+                                    Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light border">
+                    Bạn chưa lưu địa chỉ nào.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

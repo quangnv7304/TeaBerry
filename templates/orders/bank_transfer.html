@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Chuyển khoản – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="card border-0 shadow-sm mx-auto"
+        style="max-width: 720px;"
+    >
+        <div class="card-body p-4 p-md-5">
+            <h1 class="fw-bold">
+                Thanh toán chuyển khoản
+            </h1>
+
+            <p>
+                Vui lòng chuyển đúng số tiền và nội dung.
+            </p>
+
+            <div class="bg-light rounded-3 p-4 my-4">
+                <p>
+                    <strong>Ngân hàng:</strong>
+                    Cập nhật trong bước tiếp theo
+                </p>
+
+                <p>
+                    <strong>Số tài khoản:</strong>
+                    Cập nhật trong bước tiếp theo
+                </p>
+
+                <p>
+                    <strong>Số tiền:</strong>
+                    {{ order.total }}đ
+                </p>
+
+                <p class="mb-0">
+                    <strong>Nội dung:</strong>
+                    {{ order.order_code }}
+                </p>
+            </div>
+
+            <p class="text-warning">
+                Đơn hàng đang chờ TeaBerry xác nhận thanh toán.
+            </p>
+
+            <a
+                href="{% url 'orders:success' order.id %}"
+                class="btn btn-teaberry"
+            >
+                Xem thông tin đơn hàng
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

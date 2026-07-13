@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Đặt hàng thành công – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="card border-0 shadow-sm mx-auto"
+        style="max-width: 720px;"
+    >
+        <div class="card-body p-4 p-md-5 text-center">
+            <div class="display-5 mb-3">
+                ✓
+            </div>
+
+            <h1 class="fw-bold">
+                Đặt hàng thành công!
+            </h1>
+
+            <p class="text-muted">
+                TeaBerry đã nhận được đơn của bạn.
+            </p>
+
+            <div class="bg-light rounded-3 p-3 my-4">
+                <div class="text-muted">
+                    Mã đơn hàng
+                </div>
+
+                <div class="fs-4 fw-bold">
+                    {{ order.order_code }}
+                </div>
+            </div>
+
+            <div class="text-start">
+                <p>
+                    <strong>Người nhận:</strong>
+                    {{ order.customer_name }}
+                </p>
+
+                <p>
+                    <strong>Số điện thoại:</strong>
+                    {{ order.customer_phone }}
+                </p>
+
+                <p>
+                    <strong>Địa chỉ:</strong>
+                    {{ order.shipping_address }}
+                </p>
+
+                <p>
+                    <strong>Tổng thanh toán:</strong>
+                    {{ order.total }}đ
+                </p>
+
+                <p>
+                    <strong>Trạng thái:</strong>
+                    {{ order.get_status_display }}
+                </p>
+            </div>
+
+            <a
+                href="{% url 'catalog:product-list' %}"
+                class="btn btn-teaberry mt-3"
+            >
+                Tiếp tục mua hàng
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

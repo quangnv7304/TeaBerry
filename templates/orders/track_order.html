@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Theo dõi đơn hàng – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="mx-auto"
+        style="max-width: 760px;"
+    >
+        <h1 class="fw-bold">
+            Theo dõi đơn hàng
+        </h1>
+
+        <p class="text-muted">
+            Nhập mã đơn và số điện thoại nhận hàng.
+        </p>
+
+        <form
+            method="post"
+            class="card border-0 shadow-sm mb-4"
+        >
+            {% csrf_token %}
+
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <label
+                        for="order-code"
+                        class="form-label"
+                    >
+                        Mã đơn hàng
+                    </label>
+
+                    <input
+                        id="order-code"
+                        type="text"
+                        name="order_code"
+                        class="form-control"
+                        required
+                        placeholder="TB-260712-ABC123"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label
+                        for="customer-phone"
+                        class="form-label"
+                    >
+                        S? di?n tho?i
+                    </label>
+
+                    <input
+                        id="customer-phone"
+                        type="tel"
+                        name="customer_phone"
+                        class="form-control"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-teaberry"
+                >
+                    Tra c?u don
+                </button>
+            </div>
+        </form>
+
+        {% if error_message %}
+            <div class="alert alert-danger">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
+        {% if order %}
+            <article class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div
+                        class="d-flex justify-content-between flex-wrap gap-2"
+                    >
+                        <div>
+                            <div class="text-muted">
+                                Mã đơn
+                            </div>
+
+                            <h2 class="h4">
+                                {{ order.order_code }}
+                            </h2>
+                        </div>
+
+                        <span
+                            class="badge text-bg-primary align-self-start"
+                        >
+                            {{ order.get_status_display }}
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    <h3 class="h5">
+                        Tiến trình đơn hàng
+                    </h3>
+
+                    <div class="list-group list-group-flush">
+                        {% for history in order.status_history.all %}
+                            <div class="list-group-item px-0">
+                                <strong>
+                                    {{ history.get_new_status_display }}
+                                </strong>
+
+                                <div class="small text-muted">
+                                    {{ history.created_at|date:"H:i d/m/Y" }}
+                                </div>
+
+                                {% if history.note %}
+                                    <div class="small">
+                                        {{ history.note }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+
+                    {% for item in order.items.all %}
+                        <div
+                            class="d-flex justify-content-between border-bottom py-2"
+                        >
+                            <span>
+                                {{ item.quantity }} ×
+                                {{ item.product_name }}
+                            </span>
+
+                            <strong>
+                                {{ item.line_total }}d
+                            </strong>
+                        </div>
+                    {% endfor %}
+
+                    <div
+                        class="d-flex justify-content-between fs-5 mt-4"
+                    >
+                        <strong>Tổng thanh toán</strong>
+                        <strong>{{ order.total }}d</strong>
+                    </div>
+                </div>
+            </article>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
