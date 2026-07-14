@@ -11,9 +11,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -127,6 +130,25 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "dashboard:home"
 LOGOUT_REDIRECT_URL = "catalog:product-list"
 
+TEABERRY_BANK_CODE = os.getenv(
+    "TEABERRY_BANK_CODE",
+    "",
+)
+
+TEABERRY_BANK_NAME = os.getenv(
+    "TEABERRY_BANK_NAME",
+    "",
+)
+
+TEABERRY_BANK_ACCOUNT = os.getenv(
+    "TEABERRY_BANK_ACCOUNT",
+    "",
+)
+
+TEABERRY_BANK_HOLDER = os.getenv(
+    "TEABERRY_BANK_HOLDER",
+    "",
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

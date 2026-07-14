@@ -35,6 +35,10 @@ urlpatterns = [
     "account/",
     include("apps.accounts.urls"),
 ),
+    path(
+    "payment/",
+    include("apps.payment.urls"),
+),
 ]
 
 if settings.DEBUG:

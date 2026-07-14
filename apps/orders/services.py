@@ -330,6 +330,11 @@ def create_order_from_cart(
             note="Đơn hàng được tạo.",
         )
 
+    if order.payment_method == PaymentMethod.BANK_TRANSFER:
+        from apps.payment.services import get_or_create_bank_transfer_payment
+
+        get_or_create_bank_transfer_payment(order=order)
+
     session_cart.clear()
 
     recent_order_ids = request.session.get(
@@ -477,6 +482,7 @@ def staff_order_detail_view(
         .select_related(
             "store",
             "customer",
+            "payment_transaction",
         )
         .prefetch_related(
             "items",
@@ -485,11 +491,14 @@ def staff_order_detail_view(
         pk=order_id,
     )
 
+    payment = getattr(order, "payment_transaction", None)
+
     return render(
         request,
         "orders/staff_order_detail.html",
         {
             "order": order,
+            "payment": payment,
         },
     )
 @login_required

@@ -100,7 +100,7 @@ def checkout_view(
 
                 if order.payment_method == "BANK_TRANSFER":
                     return redirect(
-                        "orders:bank-transfer",
+                        "payment:bank-transfer",
                         order_id=order.id,
                     )
 

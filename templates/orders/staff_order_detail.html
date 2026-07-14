@@ -202,6 +202,65 @@
                             Đơn không còn thao tác tiếp theo.
                         </p>
                     {% endif %}
+                    {% if payment %}
+    <aside class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5">
+                Thanh toán chuyển khoản
+            </h2>
+
+            <p class="mb-1">
+                Trạng thái:
+                <strong>
+                    {{ payment.get_status_display }}
+                </strong>
+            </p>
+
+            <p class="mb-1">
+                Số tiền:
+                <strong>{{ payment.amount }}đ</strong>
+            </p>
+
+            {% if payment.customer_submitted_at %}
+                <p class="small text-warning">
+                    Khách báo đã chuyển lúc
+                    {{ payment.customer_submitted_at|date:"H:i d/m/Y" }}
+                </p>
+            {% endif %}
+
+            {% if payment.status != "SUCCESS" %}
+                <form
+                    method="post"
+                    action="{% url 'payment:staff-confirm' payment.id %}"
+                >
+                    {% csrf_token %}
+
+                    <label
+                        for="provider-transaction-id"
+                        class="form-label"
+                    >
+                        Mã giao dịch ngân hàng
+                    </label>
+
+                    <input
+                        id="provider-transaction-id"
+                        type="text"
+                        name="provider_transaction_id"
+                        class="form-control mb-2"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        class="btn btn-success w-100"
+                    >
+                        Xác nhận đã nhận tiền
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </aside>
+{% endif %}
                 </div>
             </aside>
         </div>

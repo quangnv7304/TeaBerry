@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Thanh toán {{ order.order_code }} – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="card border-0 shadow-sm mx-auto"
+        style="max-width: 760px;"
+    >
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center">
+                <h1 class="h3 fw-bold">
+                    Chuyển khoản ngân hàng
+                </h1>
+
+                <p class="text-muted">
+                    Quét QR và kiểm tra kỹ thông tin trước khi chuyển.
+                </p>
+            </div>
+
+            <div class="text-center my-4">
+                <img
+                    src="{{ qr_image_url }}"
+                    alt="Mã QR thanh toán đơn {{ order.order_code }}"
+                    class="img-fluid rounded-3 border"
+                    style="max-width: 420px;"
+                >
+            </div>
+
+            <div class="bg-light rounded-3 p-4">
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <div class="text-muted small">
+                            Ngân hàng
+                        </div>
+
+                        <strong>
+                            {{ payment.bank_name }}
+                        </strong>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="text-muted small">
+                            Số tài khoản
+                        </div>
+
+                        <strong>
+                            {{ payment.account_number }}
+                        </strong>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="text-muted small">
+                            Chủ tài khoản
+                        </div>
+
+                        <strong>
+                            {{ payment.account_holder }}
+                        </strong>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="text-muted small">
+                            Số tiền
+                        </div>
+
+                        <strong class="text-danger">
+                            {{ payment.amount }}đ
+                        </strong>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="text-muted small">
+                            Nội dung chuyển khoản
+                        </div>
+
+                        <strong class="fs-5">
+                            {{ payment.transfer_content }}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            {% if payment.status == "SUCCESS" %}
+                <div class="alert alert-success mt-4">
+                    Thanh toán đã được TeaBerry xác nhận.
+                </div>
+            {% else %}
+                {% if payment.customer_submitted_at %}
+                    <div class="alert alert-warning mt-4">
+                        TeaBerry đang kiểm tra giao dịch của bạn.
+                    </div>
+                {% else %}
+                    <form
+                        method="post"
+                        action="{% url 'payment:customer-submitted' payment.id %}"
+                        class="mt-4"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="btn btn-teaberry btn-lg w-100"
+                        >
+                            Tôi đã chuyển khoản
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            <p class="small text-muted mt-3 mb-0">
+                Nút “Tôi đã chuyển khoản” không đồng nghĩa giao dịch
+                đã thành công. TeaBerry chỉ cập nhật sau khi kiểm tra
+                tiền đã vào tài khoản.
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
