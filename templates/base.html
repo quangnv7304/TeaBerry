@@ -161,6 +161,18 @@
                             </a>
                         </li>
                     {% endif %}
+                    {% if user.is_authenticated %}
+    {% if user.is_superuser or user.role == "MANAGER" or user.role == "ADMIN" %}
+        <li class="nav-item">
+            <a
+                class="nav-link"
+                href="{% url 'inventory:dashboard' %}"
+            >
+                Kho
+            </a>
+        </li>
+    {% endif %}
+{% endif %}
                 </ul>
             </div>
         </div>

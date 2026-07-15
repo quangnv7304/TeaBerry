@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Quản lý kho – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">
+            Quản lý kho
+        </h1>
+
+        <p class="text-muted mb-0">
+            Theo dõi nguyên liệu và lịch sử nhập xuất.
+        </p>
+    </div>
+
+    {% if low_stock_ingredients %}
+        <div class="alert alert-warning mb-4">
+            <h2 class="h5">
+                Nguyên liệu sắp hết
+            </h2>
+
+            <ul class="mb-0">
+                {% for ingredient in low_stock_ingredients %}
+                    <li>
+                        <strong>{{ ingredient.name }}</strong>:
+                        {{ ingredient.current_stock }}
+                        {{ ingredient.get_unit_display }}
+
+                        — mức cảnh báo:
+                        {{ ingredient.minimum_stock }}
+                        {{ ingredient.get_unit_display }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">
+                        Tồn kho hiện tại
+                    </h2>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nguyên liệu</th>
+                                    <th>Mã</th>
+                                    <th>Tồn kho</th>
+                                    <th>Cảnh báo</th>
+                                    <th>Nhập thêm</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for ingredient in ingredients %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                {{ ingredient.name }}
+                                            </strong>
+                                        </td>
+
+                                        <td>
+                                            {{ ingredient.code }}
+                                        </td>
+
+                                        <td>
+                                            {% if ingredient.current_stock <= ingredient.minimum_stock %}
+                                                <span class="text-danger fw-bold">
+                                                    {{ ingredient.current_stock }}
+                                                    {{ ingredient.get_unit_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="fw-bold">
+                                                    {{ ingredient.current_stock }}
+                                                    {{ ingredient.get_unit_display }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            {{ ingredient.minimum_stock }}
+                                            {{ ingredient.get_unit_display }}
+                                        </td>
+
+                                        <td style="min-width: 260px;">
+                                            <form
+                                                method="post"
+                                                action="{% url 'inventory:import-stock' ingredient.id %}"
+                                                class="d-flex gap-2"
+                                            >
+                                                {% csrf_token %}
+
+                                                <input
+                                                    type="number"
+                                                    name="quantity"
+                                                    min="0.01"
+                                                    step="0.01"
+                                                    class="form-control"
+                                                    placeholder="Số lượng"
+                                                    required
+                                                >
+
+                                                <input
+                                                    type="text"
+                                                    name="note"
+                                                    maxlength="255"
+                                                    class="form-control"
+                                                    placeholder="Ghi chú"
+                                                >
+
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-success"
+                                                >
+                                                    Nhập
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5">
+                                            Chưa có nguyên liệu.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <aside class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">
+                        Giao dịch gần đây
+                    </h2>
+
+                    {% for transaction in recent_transactions %}
+                        <article class="border-bottom py-3">
+                            <div class="d-flex justify-content-between gap-3">
+                                <div>
+                                    <strong>
+                                        {{ transaction.ingredient.name }}
+                                    </strong>
+
+                                    <div class="small text-muted">
+                                        {{ transaction.get_transaction_type_display }}
+                                    </div>
+
+                                    {% if transaction.order %}
+                                        <div class="small">
+                                            Đơn:
+                                            {{ transaction.order.order_code }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="text-end">
+                                    {% if transaction.quantity > 0 %}
+                                        <strong class="text-success">
+                                            +{{ transaction.quantity }}
+                                        </strong>
+                                    {% else %}
+                                        <strong class="text-danger">
+                                            {{ transaction.quantity }}
+                                        </strong>
+                                    {% endif %}
+
+                                    <div class="small text-muted">
+                                        Còn:
+                                        {{ transaction.balance_after }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="small text-muted mt-1">
+                                {{ transaction.created_at|date:"H:i d/m/Y" }}
+                            </div>
+                        </article>
+                    {% empty %}
+                        <p class="text-muted mb-0">
+                            Chưa có giao dịch kho.
+                        </p>
+                    {% endfor %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

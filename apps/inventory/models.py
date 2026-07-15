@@ -21,6 +21,10 @@ class Ingredient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_low_stock(self) -> bool:
+        return self.current_stock <= self.minimum_stock
+
     class Meta:
         ordering = ("name",)
 

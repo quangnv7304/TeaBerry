@@ -48,6 +48,10 @@ urlpatterns = [
     "kitchen/",
     include("apps.kitchen.urls"),
 ),
+    path(
+    "inventory/",
+    include("apps.inventory.urls"),
+),
 ]
 
 if settings.DEBUG:
