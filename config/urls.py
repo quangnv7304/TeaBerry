@@ -39,6 +39,11 @@ urlpatterns = [
     "payment/",
     include("apps.payment.urls"),
 ),
+    path("pos/", include("apps.pos.urls")),
+    path(
+    "receipt/",
+    include("apps.receipt.urls"),
+),
 ]
 
 if settings.DEBUG:

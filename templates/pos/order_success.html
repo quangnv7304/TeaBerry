@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Hoàn tất đơn POS – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="card border-0 shadow-sm mx-auto"
+        style="max-width: 720px;"
+    >
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center">
+                <div class="display-5 mb-3">✓</div>
+
+                <h1 class="h3 fw-bold">
+                    Thanh toán thành công
+                </h1>
+
+                <p class="text-muted">
+                    Đơn tại quầy đã được tạo.
+                </p>
+            </div>
+
+            <div class="bg-light rounded-3 p-3 my-4 text-center">
+                <div class="text-muted">
+                    Mã đơn
+                </div>
+
+                <div class="fs-4 fw-bold">
+                    {{ order.order_code }}
+                </div>
+            </div>
+
+            {% for item in order.items.all %}
+                <div class="d-flex justify-content-between border-bottom py-2">
+                    <span>
+                        {{ item.quantity }} ×
+                        {{ item.product_name }}
+
+                        {% if item.variant_name %}
+                            – {{ item.variant_name }}
+                        {% endif %}
+                    </span>
+
+                    <strong>
+                        {{ item.line_total }}đ
+                    </strong>
+                </div>
+            {% endfor %}
+
+            <div class="d-flex justify-content-between fs-5 mt-4">
+                <strong>Tổng đã thu</strong>
+                <strong>{{ order.total }}đ</strong>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+           <a
+            href="{% url 'receipt:detail' order.id %}"
+            target="_blank"
+            class="btn btn-outline-secondary">
+            In hóa đơn
+            </a>
+
+                <a
+                    href="{% url 'pos:home' %}"
+                    class="btn btn-teaberry"
+                >
+                    Tạo đơn mới
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}
+    POS – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container-fluid py-4">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">
+            TeaBerry POS
+        </h1>
+
+        <p class="text-muted mb-0">
+            Thu ngân:
+            {{ user.full_name|default:user.email }}
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Danh sách sản phẩm -->
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <input
+                        id="product-search"
+                        type="search"
+                        class="form-control form-control-lg mb-4"
+                        placeholder="Tìm sản phẩm..."
+                    >
+
+                    <div class="row g-3">
+                        {% for product in products %}
+                            <div
+                                class="col-12 col-sm-6 col-lg-4 product-item"
+                                data-product-name="{{ product.name|lower }}"
+                            >
+                                <article class="card h-100">
+                                    {% if product.image %}
+                                        <img
+                                            src="{{ product.image.url }}"
+                                            class="card-img-top"
+                                            alt="{{ product.name }}"
+                                            style="
+                                                height: 160px;
+                                                object-fit: cover;
+                                            "
+                                        >
+                                    {% endif %}
+
+                                    <div class="card-body d-flex flex-column">
+                                        <div class="small text-muted">
+                                            {{ product.category.name }}
+                                        </div>
+
+                                        <h2 class="h6 mt-1">
+                                            {{ product.name }}
+                                        </h2>
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'pos:item-add' %}"
+                                            class="mt-auto"
+                                        >
+                                            {% csrf_token %}
+
+                                            <input
+                                                type="hidden"
+                                                name="product_id"
+                                                value="{{ product.id }}"
+                                            >
+
+                                            {% if product.has_variants %}
+                                                <label
+                                                    class="form-label small"
+                                                >
+                                                    Kích thước
+                                                </label>
+
+                                                <select
+                                                    name="variant_id"
+                                                    class="form-select mb-2"
+                                                    required
+                                                >
+                                                    {% for variant in product.variants.all %}
+                                                        {% if variant.is_available %}
+                                                            <option
+                                                                value="{{ variant.id }}"
+                                                            >
+                                                                {{ variant.name }}
+                                                                –
+                                                                {{ variant.price }}đ
+                                                            </option>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </select>
+                                            {% else %}
+                                                <div class="fw-bold mb-2">
+                                                    {{ product.base_price }}đ
+                                                </div>
+                                            {% endif %}
+                                            {% if product.supports_sugar %}
+                <label class="form-label small">
+                    Mức đường
+                </label>
+
+                <select
+                    name="sugar_choice_id"
+                    class="form-select mb-2"
+                    required
+                >
+                    {% for relation in product.product_options.all %}
+                        {% if relation.option_choice.option_type == "SUGAR" %}
+                            {% if relation.option_choice.is_active %}
+                                <option
+                                    value="{{ relation.option_choice.id }}"
+                                    {% if relation.is_default %}selected{% endif %}
+                                >
+                                    {{ relation.option_choice.label }}
+                                </option>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            {% endif %}
+
+            {% if product.supports_ice %}
+                <label class="form-label small">
+                    Mức đá
+                </label>
+
+                <select
+                    name="ice_choice_id"
+                    class="form-select mb-2"
+                    required
+                >
+                    {% for relation in product.product_options.all %}
+                        {% if relation.option_choice.option_type == "ICE" %}
+                            {% if relation.option_choice.is_active %}
+                                <option
+                                    value="{{ relation.option_choice.id }}"
+                                    {% if relation.is_default %}selected{% endif %}
+                                >
+                                    {{ relation.option_choice.label }}
+                                </option>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            {% endif %}
+
+            {% if product.product_toppings.all %}
+                <div class="mb-2">
+                    <div class="form-label small mb-1">
+                        Topping
+                    </div>
+
+                    {% for relation in product.product_toppings.all %}
+                        {% if relation.topping.is_available %}
+                            <div class="form-check">
+                                <input
+                                    id="pos-topping-{{ product.id }}-{{ relation.topping.id }}"
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="toppings"
+                                    value="{{ relation.topping.id }}"
+                                >
+
+                                <label
+                                    class="form-check-label small"
+                                    for="pos-topping-{{ product.id }}-{{ relation.topping.id }}"
+                                >
+                                    {{ relation.topping.name }}
+                                    (+{{ relation.topping.price }}đ)
+                                </label>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+                                                        <div class="input-group mb-2">
+                                                            <span class="input-group-text">
+                                                                SL
+                                                            </span>
+
+                                                            <input
+                                                                type="number"
+                                                                name="quantity"
+                                                                value="1"
+                                                                min="1"
+                                                                max="50"
+                                                                class="form-control"
+                                                            >
+                                                        </div>
+                                                        <input
+                                                        type="text"
+                                                        name="note"
+                                                        class="form-control mb-2"
+                                                        maxlength="255"
+                                                        placeholder="Ghi chú món..."
+                                                    >
+                                                    <button
+                                                            type="submit"
+                                                            class="btn btn-teaberry w-100"
+                                                        >
+                                                            Thêm món
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </article>
+                                        </div>
+                                    {% empty %}
+                                        <div class="col-12">
+                                            <div class="alert alert-light border">
+                                                Chưa có sản phẩm đang bán.
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Giỏ POS -->
+                    <div class="col-12 col-xl-4">
+                        <aside
+                            class="card border-0 shadow-sm sticky-top"
+                            style="top: 20px;"
+                        >
+                            <div class="card-body">
+                                <div
+                                    class="d-flex justify-content-between align-items-center"
+                                >
+                                    <h2 class="h5 mb-0">
+                                        Đơn tại quầy
+                                    </h2>
+
+                                    <span class="badge text-bg-secondary">
+                                        {{ cart|length }} món
+                                    </span>
+                                </div>
+
+                                {% if cart|length %}
+                                    <div class="mt-3">
+                                        {% for item in cart %}
+                                            <article class="border-bottom py-3">
+                                                <div
+                                                    class="d-flex justify-content-between gap-3"
+                                                >
+                                                    <div>
+                                                        <strong>
+                                                            {{ item.product_name }}
+                                                        </strong>
+
+                                                        {% if item.variant_name %}
+                                                            <div class="small text-muted">
+                                                                {{ item.variant_name }}
+                                                            </div>
+                                                        {% endif %}
+
+                                                       <div class="small">
+    {{ item.unit_total }}đ/món
+</div>
+                                                    </div>
+
+                                                    <strong>
+                                                        {{ item.line_total }}đ
+                                                    </strong>
+                                                </div>
+
+                                                <div
+                                                    class="d-flex justify-content-between gap-2 mt-2"
+                                                >
+                                                    <form
+                                                        method="post"
+                                                        action="{% url 'pos:item-update' item.item_key %}"
+                                                        class="d-flex gap-2"
+                                                    >
+                                                        {% csrf_token %}
+
+                                                        <input
+                                                            type="number"
+                                                            name="quantity"
+                                                            value="{{ item.quantity }}"
+                                                            min="1"
+                                                            max="50"
+                                                            class="form-control form-control-sm"
+                                                            style="width: 75px;"
+                                                        >
+
+                                                        <button
+                                                            type="submit"
+                                                            class="btn btn-outline-secondary btn-sm"
+                                                        >
+                                                            Sửa
+                                                        </button>
+                                                    </form>
+
+                                                    <form
+                                                        method="post"
+                                                        action="{% url 'pos:item-remove' item.item_key %}"
+                                                    >
+                                                        {% csrf_token %}
+
+                                                        <button
+                                                            type="submit"
+                                                            class="btn btn-outline-danger btn-sm"
+                                                        >
+                                                            Xóa
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </article>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div
+                                        class="d-flex justify-content-between fs-5 mt-4"
+                                    >
+                                        <strong>Tổng tiền</strong>
+
+                                        <strong class="text-danger">
+                                            {{ cart.get_total }}đ
+                                        </strong>
+                                    </div>
+
+                                    <a
+                                        href="{% url 'pos:checkout' %}"
+                                        class="btn btn-teaberry btn-lg w-100 mt-4"
+                                    >
+                                        Thanh toán
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'pos:clear' %}"
+                                        class="mt-2"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-outline-danger w-100"
+                                        >
+                                            Hủy đơn hiện tại
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <div class="alert alert-light border mt-3 mb-0">
+                                        Chưa có sản phẩm trong đơn.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </section>
+            {% endblock %}
+
+            {% block extra_js %}
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const searchInput = document.getElementById(
+                        "product-search"
+                    );
+
+                    const productItems = document.querySelectorAll(
+                        ".product-item"
+                    );
+
+                    searchInput.addEventListener("input", function () {
+                        const keyword = searchInput.value
+                            .trim()
+                            .toLowerCase();
+
+                        productItems.forEach(function (item) {
+                            const productName =
+                                item.dataset.productName;
+
+                            item.hidden = !productName.includes(
+                                keyword
+                            );
+                        });
+                    });
+                });
+            </script>
+            {% endblock %}

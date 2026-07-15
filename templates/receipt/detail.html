@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        Hóa đơn {{ order.order_code }}
+    </title>
+
+    <style>
+        @page {
+            size: 80mm auto;
+            margin: 3mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 74mm;
+            margin: 0 auto;
+            color: #000;
+            background: #fff;
+            font-family:
+                "Courier New",
+                Courier,
+                monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .receipt {
+            width: 100%;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .brand {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .tagline {
+            margin: 2px 0 8px;
+        }
+
+        .separator {
+            margin: 8px 0;
+            border: 0;
+            border-top: 1px dashed #000;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .row + .row {
+            margin-top: 3px;
+        }
+
+        .item {
+            padding: 6px 0;
+        }
+
+        .item-name {
+            font-weight: 700;
+        }
+
+        .item-option {
+            padding-left: 12px;
+            font-size: 11px;
+        }
+
+        .total-row {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .actions button,
+        .actions a {
+            flex: 1;
+            padding: 9px;
+            color: #000;
+            background: #fff;
+            border: 1px solid #000;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @media print {
+            body {
+                width: 74mm;
+            }
+
+            .actions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="receipt">
+        <header class="text-center">
+            <h1 class="brand">
+                TEABERRY
+            </h1>
+
+            <p class="tagline">
+                Tươi mỗi ngày, vui mỗi vị
+            </p>
+
+            {% if order.store.address %}
+                <div>
+                    {{ order.store.address }}
+                </div>
+            {% endif %}
+
+            {% if order.store.phone %}
+                <div>
+                    Điện thoại: {{ order.store.phone }}
+                </div>
+            {% endif %}
+        </header>
+
+        <hr class="separator">
+
+        <section>
+            <div class="row">
+                <span>Mã đơn:</span>
+                <strong>{{ order.order_code }}</strong>
+            </div>
+
+            <div class="row">
+                <span>Ngày:</span>
+                <span>
+                    {{ order.created_at|date:"H:i d/m/Y" }}
+                </span>
+            </div>
+
+            <div class="row">
+                <span>Thu ngân:</span>
+                <span>
+                    {% if order.cashier %}
+                        {{ order.cashier.full_name|default:order.cashier.email }}
+                    {% else %}
+                        Không xác định
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="row">
+                <span>Hình thức:</span>
+                <span>
+                    {{ order.get_fulfillment_type_display }}
+                </span>
+            </div>
+
+            {% if order.table_number %}
+                <div class="row">
+                    <span>Số bàn:</span>
+                    <strong>{{ order.table_number }}</strong>
+                </div>
+            {% endif %}
+
+            {% if order.customer_name %}
+                <div class="row">
+                    <span>Khách:</span>
+                    <span>{{ order.customer_name }}</span>
+                </div>
+            {% endif %}
+        </section>
+
+        <hr class="separator">
+
+        <section>
+            {% for item in order.items.all %}
+                <article class="item">
+                    <div class="row">
+                        <div class="item-name">
+                            {{ item.quantity }} ×
+                            {{ item.product_name }}
+                        </div>
+
+                        <strong>
+                            {{ item.line_total }}đ
+                        </strong>
+                    </div>
+
+                    {% if item.variant_name %}
+                        <div class="item-option">
+                            Size: {{ item.variant_name }}
+                        </div>
+                    {% endif %}
+
+                    {% if item.sugar_label %}
+                        <div class="item-option">
+                            Đường: {{ item.sugar_label }}
+                        </div>
+                    {% endif %}
+
+                    {% if item.ice_label %}
+                        <div class="item-option">
+                            Đá: {{ item.ice_label }}
+                        </div>
+                    {% endif %}
+
+                    {% for topping in item.toppings %}
+                        <div class="item-option">
+                            + {{ topping.name }}
+                            ({{ topping.price }}đ)
+                        </div>
+                    {% endfor %}
+
+                    {% if item.note %}
+                        <div class="item-option">
+                            Ghi chú: {{ item.note }}
+                        </div>
+                    {% endif %}
+
+                    <div class="item-option">
+                        Đơn giá:
+                        {{ item.unit_price }}đ
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+
+        <hr class="separator">
+
+        <section>
+            <div class="row">
+                <span>Tạm tính:</span>
+                <strong>{{ order.subtotal }}đ</strong>
+            </div>
+
+            {% if order.discount %}
+                <div class="row">
+                    <span>Giảm giá:</span>
+                    <strong>-{{ order.discount }}đ</strong>
+                </div>
+            {% endif %}
+
+            <div class="row total-row">
+                <span>TỔNG TIỀN:</span>
+                <span>{{ order.total }}đ</span>
+            </div>
+
+            <div class="row">
+                <span>Thanh toán:</span>
+                <span>
+                    {{ order.get_payment_method_display }}
+                </span>
+            </div>
+
+            <div class="row">
+                <span>Trạng thái:</span>
+                <span>
+                    {{ order.get_payment_status_display }}
+                </span>
+            </div>
+        </section>
+
+        <hr class="separator">
+
+        <footer class="text-center">
+            <strong>
+                Cảm ơn quý khách!
+            </strong>
+
+            <p>
+                Hẹn gặp lại tại TeaBerry.
+            </p>
+        </footer>
+
+        <div class="actions">
+            <button
+                type="button"
+                onclick="window.print()"
+            >
+                In hóa đơn
+            </button>
+
+            <a href="{% url 'pos:home' %}">
+                Đơn mới
+            </a>
+        </div>
+    </main>
+
+    <script>
+        const queryParams = new URLSearchParams(
+            window.location.search
+        );
+
+        if (queryParams.get("autoprint") === "1") {
+            window.addEventListener(
+                "load",
+                function () {
+                    window.print();
+                }
+            );
+        }
+    </script>
+</body>
+</html>

@@ -23,6 +23,7 @@ class OrderStatus(models.TextChoices):
 class PaymentMethod(models.TextChoices):
     COD = "COD", "Thanh toán khi nhận hàng"
     BANK_TRANSFER = "BANK_TRANSFER", "Chuyển khoản ngân hàng"
+    CASH = "CASH", "Tiền mặt tại quầy"
 
 
 class PaymentStatus(models.TextChoices):
@@ -31,6 +32,17 @@ class PaymentStatus(models.TextChoices):
     PAID = "PAID", "Đã thanh toán"
     FAILED = "FAILED", "Thanh toán thất bại"
     REFUNDED = "REFUNDED", "Đã hoàn tiền"
+
+
+class OrderSource(models.TextChoices):
+    ONLINE = "ONLINE", "Website"
+    POS = "POS", "Bán tại quầy"
+
+
+class FulfillmentType(models.TextChoices):
+    DELIVERY = "DELIVERY", "Giao hàng"
+    PICKUP = "PICKUP", "Khách tự đến lấy"
+    DINE_IN = "DINE_IN", "Dùng tại quán"
 
 
 def generate_order_code() -> str:
@@ -74,6 +86,35 @@ class Order(models.Model):
         on_delete=models.PROTECT,
         related_name="orders",
         verbose_name="Cửa hàng",
+    )
+
+    source = models.CharField(
+        max_length=20,
+        choices=OrderSource.choices,
+        default=OrderSource.ONLINE,
+        verbose_name="Nguồn đơn hàng",
+    )
+
+    fulfillment_type = models.CharField(
+        max_length=20,
+        choices=FulfillmentType.choices,
+        default=FulfillmentType.DELIVERY,
+        verbose_name="Hình thức nhận hàng",
+    )
+
+    table_number = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="Số bàn",
+    )
+
+    cashier = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="pos_orders",
+        null=True,
+        blank=True,
+        verbose_name="Thu ngân",
     )
 
     customer_name = models.CharField(

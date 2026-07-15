@@ -36,6 +36,16 @@
                     </div>
 
                     <hr>
+                    {% if order.source == "POS" %}
+                        <a
+                            href="{% url 'receipt:detail' order.id %}"
+                            target="_blank"
+                            rel="noopener"
+                            class="btn btn-outline-secondary"
+                        >
+                            In hóa đơn POS
+                        </a>
+                    {% endif %}
 
                     {% for item in order.items.all %}
                         <div class="border-bottom py-3">

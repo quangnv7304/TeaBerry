@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Thanh toán POS – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="mb-4">
+        <h1 class="fw-bold">
+            Thanh toán tại quầy
+        </h1>
+
+        <p class="text-muted">
+            Kiểm tra đơn trước khi thu tiền.
+        </p>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-4">
+                            Thông tin đơn
+                        </h2>
+
+                        {% for radio in form.fulfillment_type %}
+                            <div class="form-check border rounded-3 p-3 ps-5 mb-2">
+                                {{ radio.tag }}
+
+                                <label
+                                    class="form-check-label"
+                                    for="{{ radio.id_for_label }}"
+                                >
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
+
+                        <div class="mb-3 mt-4">
+                            <label class="form-label">
+                                {{ form.customer_name.label }}
+                            </label>
+
+                            {{ form.customer_name }}
+
+                            {% for error in form.customer_name.errors %}
+                                <div class="text-danger small">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.customer_phone.label }}
+                            </label>
+
+                            {{ form.customer_phone }}
+
+                            {% for error in form.customer_phone.errors %}
+                                <div class="text-danger small">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.table_number.label }}
+                            </label>
+
+                            {{ form.table_number }}
+
+                            {% for error in form.table_number.errors %}
+                                <div class="text-danger small">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                {{ form.note.label }}
+                            </label>
+
+                            {{ form.note }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <aside class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5">
+                            Chi tiết thanh toán
+                        </h2>
+
+                        {% for item in cart %}
+                            <div class="border-bottom py-3">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>
+                                            {{ item.quantity }} ×
+                                            {{ item.product_name }}
+                                        </strong>
+
+                                        {% if item.variant_name %}
+                                            <div class="small text-muted">
+                                                {{ item.variant_name }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <strong>
+                                        {{ item.line_total }}đ
+                                    </strong>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="d-flex justify-content-between fs-5 mt-4">
+                            <strong>Tổng thu</strong>
+
+                            <strong class="text-danger">
+                                {{ cart.get_total }}đ
+                            </strong>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            Phương thức:
+                            <strong>Tiền mặt tại quầy</strong>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success btn-lg w-100"
+                        >
+                            Xác nhận đã thu tiền
+                        </button>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </form>
+</section>
+{% endblock %}
