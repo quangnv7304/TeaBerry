@@ -368,6 +368,7 @@ ALLOWED_STATUS_TRANSITIONS = {
     },
     OrderStatus.READY: {
         OrderStatus.DELIVERING,
+        OrderStatus.COMPLETED,
     },
     OrderStatus.DELIVERING: {
         OrderStatus.COMPLETED,

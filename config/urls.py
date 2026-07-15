@@ -44,6 +44,10 @@ urlpatterns = [
     "receipt/",
     include("apps.receipt.urls"),
 ),
+    path(
+    "kitchen/",
+    include("apps.kitchen.urls"),
+),
 ]
 
 if settings.DEBUG:

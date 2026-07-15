@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Màn hình pha chế – TeaBerry
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kitchen-board {
+        min-height: calc(100vh - 140px);
+    }
+
+    .kitchen-column {
+        min-height: 520px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.7);
+    }
+
+    .kitchen-order {
+        border: 0;
+        border-radius: 16px;
+    }
+
+    .kitchen-order--confirmed {
+        border-left: 6px solid #ffc107;
+    }
+
+    .kitchen-order--preparing {
+        border-left: 6px solid #0d6efd;
+    }
+
+    .kitchen-order--ready {
+        border-left: 6px solid #198754;
+    }
+
+    .order-note {
+        white-space: pre-wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container-fluid py-4 kitchen-board">
+    <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
+    >
+        <div>
+            <h1 class="fw-bold mb-1">
+                Kitchen Display
+            </h1>
+
+            <p class="text-muted mb-0">
+                Màn hình pha chế TeaBerry
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <span
+                id="refresh-status"
+                class="small text-muted"
+            >
+                Đang cập nhật...
+            </span>
+
+            <button
+                id="refresh-button"
+                type="button"
+                class="btn btn-outline-secondary"
+            >
+                Tải lại
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-4">
+            <section class="kitchen-column p-3">
+                <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                >
+                    <h2 class="h4 mb-0">
+                        Chờ pha
+                    </h2>
+
+                    <span
+                        id="confirmed-count"
+                        class="badge text-bg-warning"
+                    >
+                        0
+                    </span>
+                </div>
+
+                <div
+                    id="confirmed-orders"
+                    class="d-grid gap-3"
+                ></div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="kitchen-column p-3">
+                <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                >
+                    <h2 class="h4 mb-0">
+                        Đang pha
+                    </h2>
+
+                    <span
+                        id="preparing-count"
+                        class="badge text-bg-primary"
+                    >
+                        0
+                    </span>
+                </div>
+
+                <div
+                    id="preparing-orders"
+                    class="d-grid gap-3"
+                ></div>
+            </section>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <section class="kitchen-column p-3">
+                <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                >
+                    <h2 class="h4 mb-0">
+                        Đã pha xong
+                    </h2>
+
+                    <span
+                        id="ready-count"
+                        class="badge text-bg-success"
+                    >
+                        0
+                    </span>
+                </div>
+
+                <div
+                    id="ready-orders"
+                    class="d-grid gap-3"
+                ></div>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ordersApiUrl =
+            "{% url 'kitchen:orders-api' %}";
+
+        const statusUrlTemplate =
+            "{% url 'kitchen:change-status' '00000000-0000-0000-0000-000000000000' 'STATUS_VALUE' %}";
+
+        const csrfToken =
+            "{{ csrf_token }}";
+
+        const columns = {
+            CONFIRMED: document.getElementById(
+                "confirmed-orders"
+            ),
+            PREPARING: document.getElementById(
+                "preparing-orders"
+            ),
+            READY: document.getElementById(
+                "ready-orders"
+            ),
+        };
+
+        const counters = {
+            CONFIRMED: document.getElementById(
+                "confirmed-count"
+            ),
+            PREPARING: document.getElementById(
+                "preparing-count"
+            ),
+            READY: document.getElementById(
+                "ready-count"
+            ),
+        };
+
+        const refreshStatus = document.getElementById(
+            "refresh-status"
+        );
+
+        const refreshButton = document.getElementById(
+            "refresh-button"
+        );
+
+        function escapeHtml(value) {
+            const element = document.createElement("div");
+            element.textContent = value ?? "";
+            return element.innerHTML;
+        }
+
+        function buildAction(order) {
+            let nextStatus = "";
+            let buttonLabel = "";
+            let buttonClass = "";
+
+            if (order.status === "CONFIRMED") {
+                nextStatus = "PREPARING";
+                buttonLabel = "Bắt đầu pha";
+                buttonClass = "btn-primary";
+            } else if (order.status === "PREPARING") {
+                nextStatus = "READY";
+                buttonLabel = "Đã pha xong";
+                buttonClass = "btn-success";
+            } else if (order.status === "READY") {
+                nextStatus = "COMPLETED";
+                buttonLabel = "Đã giao khách";
+                buttonClass = "btn-dark";
+            } else {
+                return "";
+            }
+
+            const actionUrl = statusUrlTemplate
+                .replace(
+                    "00000000-0000-0000-0000-000000000000",
+                    order.id
+                )
+                .replace(
+                    "STATUS_VALUE",
+                    nextStatus
+                );
+
+            return `
+                <form method="post" action="${actionUrl}">
+                    <input
+                        type="hidden"
+                        name="csrfmiddlewaretoken"
+                        value="${csrfToken}"
+                    >
+
+                    <button
+                        type="submit"
+                        class="btn ${buttonClass} w-100"
+                    >
+                        ${buttonLabel}
+                    </button>
+                </form>
+            `;
+        }
+
+        function buildItems(items) {
+            return items.map(function (item) {
+                const toppingHtml = item.toppings
+                    .map(function (topping) {
+                        return `
+                            <div class="small">
+                                + ${escapeHtml(topping.name)}
+                            </div>
+                        `;
+                    })
+                    .join("");
+
+                return `
+                    <div class="border-top pt-2 mt-2">
+                        <div class="fw-semibold">
+                            ${item.quantity} ×
+                            ${escapeHtml(item.product_name)}
+                        </div>
+
+                        ${
+                            item.variant_name
+                                ? `
+                                    <div class="small">
+                                        Size:
+                                        ${escapeHtml(item.variant_name)}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            item.sugar_label
+                                ? `
+                                    <div class="small">
+                                        Đường:
+                                        ${escapeHtml(item.sugar_label)}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            item.ice_label
+                                ? `
+                                    <div class="small">
+                                        Đá:
+                                        ${escapeHtml(item.ice_label)}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        ${toppingHtml}
+
+                        ${
+                            item.note
+                                ? `
+                                    <div class="small text-danger">
+                                        Ghi chú:
+                                        ${escapeHtml(item.note)}
+                                    </div>
+                                `
+                                : ""
+                        }
+                    </div>
+                `;
+            }).join("");
+        }
+
+        function buildOrderCard(order) {
+            const tableInfo = order.table_number
+                ? `
+                    <span class="badge text-bg-dark">
+                        Bàn ${escapeHtml(order.table_number)}
+                    </span>
+                `
+                : "";
+
+            return `
+                <article
+                    class="
+                        card
+                        shadow-sm
+                        kitchen-order
+                        kitchen-order--${order.status.toLowerCase()}
+                    "
+                >
+                    <div class="card-body">
+                        <div
+                            class="d-flex justify-content-between gap-3"
+                        >
+                            <div>
+                                <h3 class="h5 mb-1">
+                                    ${escapeHtml(order.order_code)}
+                                </h3>
+
+                                <div class="small text-muted">
+                                    ${escapeHtml(order.created_time)}
+                                    ·
+                                    ${escapeHtml(order.source_label)}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                ${tableInfo}
+
+                                <div class="small mt-1">
+                                    ${escapeHtml(
+                                        order.fulfillment_label
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        ${buildItems(order.items)}
+
+                        ${
+                            order.note
+                                ? `
+                                    <div
+                                        class="
+                                            alert
+                                            alert-warning
+                                            py-2
+                                            mt-3
+                                            mb-0
+                                            order-note
+                                        "
+                                    >
+                                        ${escapeHtml(order.note)}
+                                    </div>
+                                `
+                                : ""
+                        }
+
+                        <div class="mt-3">
+                            ${buildAction(order)}
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderOrders(orders) {
+            Object.values(columns).forEach(function (column) {
+                column.innerHTML = "";
+            });
+
+            const counts = {
+                CONFIRMED: 0,
+                PREPARING: 0,
+                READY: 0,
+            };
+
+            orders.forEach(function (order) {
+                const column = columns[order.status];
+
+                if (!column) {
+                    return;
+                }
+
+                counts[order.status] += 1;
+
+                column.insertAdjacentHTML(
+                    "beforeend",
+                    buildOrderCard(order)
+                );
+            });
+
+            Object.keys(counters).forEach(function (status) {
+                counters[status].textContent =
+                    counts[status];
+            });
+
+            Object.keys(columns).forEach(function (status) {
+                if (counts[status] === 0) {
+                    columns[status].innerHTML = `
+                        <div class="text-muted text-center py-4">
+                            Không có đơn
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        async function loadOrders() {
+            refreshStatus.textContent =
+                "Đang cập nhật...";
+
+            try {
+                const response = await fetch(
+                    ordersApiUrl,
+                    {
+                        headers: {
+                            "X-Requested-With":
+                                "XMLHttpRequest",
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Không thể tải danh sách đơn."
+                    );
+                }
+
+                const data = await response.json();
+
+                renderOrders(data.orders);
+
+                refreshStatus.textContent =
+                    "Cập nhật lúc " +
+                    new Date().toLocaleTimeString(
+                        "vi-VN"
+                    );
+            } catch (error) {
+                refreshStatus.textContent =
+                    "Không thể cập nhật dữ liệu.";
+
+                console.error(error);
+            }
+        }
+
+        refreshButton.addEventListener(
+            "click",
+            loadOrders
+        );
+
+        loadOrders();
+
+        window.setInterval(
+            loadOrders,
+            8000
+        );
+    });
+</script>
+{% endblock %}
