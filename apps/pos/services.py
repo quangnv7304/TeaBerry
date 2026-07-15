@@ -205,6 +205,7 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
                 product=item.product,
                 product_name=item.product.name,
                 product_slug=item.product.slug,
+                product_variant=item.variant,
                 variant_name=item.variant.name if item.variant else "",
                 sugar_label=item.sugar_choice.label if item.sugar_choice else "",
                 ice_label=item.ice_choice.label if item.ice_choice else "",

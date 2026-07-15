@@ -293,6 +293,7 @@ def create_order_from_cart(
             product=item.product,
             product_name=item.product.name,
             product_slug=item.product.slug,
+            product_variant=item.variant,
             variant_name=(
                 item.variant.name
                 if item.variant
@@ -428,6 +429,33 @@ def change_order_status(
         changed_by=actor,
         note=note.strip(),
     )
+
+    if new_status == OrderStatus.PREPARING:
+        from apps.inventory.services import (
+            InventoryError,
+            consume_order_inventory,
+        )
+
+        try:
+            consume_order_inventory(
+                order_id=order.id,
+                actor=actor,
+            )
+        except InventoryError as exc:
+            raise InvalidOrderStatusTransition(
+                str(exc)
+            ) from exc
+
+    if new_status == OrderStatus.CANCELLED:
+        from apps.inventory.services import (
+            restore_order_inventory,
+        )
+
+        restore_order_inventory(
+            order_id=order.id,
+            actor=actor,
+            note=note,
+        )
 
     return order
 

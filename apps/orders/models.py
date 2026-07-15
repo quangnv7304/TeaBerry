@@ -9,6 +9,8 @@ from django.utils import timezone
 from apps.catalog.models import Product
 from apps.stores.models import Store
 
+from apps.catalog.models import Product, ProductVariant
+
 
 class OrderStatus(models.TextChoices):
     PENDING = "PENDING", "Chờ xác nhận"
@@ -249,6 +251,14 @@ class OrderItem(models.Model):
         blank=True,
         verbose_name="Slug sản phẩm",
     )
+    product_variant = models.ForeignKey(
+    ProductVariant,
+    on_delete=models.PROTECT,
+    related_name="order_items",
+    null=True,
+    blank=True,
+    verbose_name="Biến thể sản phẩm",
+)
 
     variant_name = models.CharField(
         max_length=100,
