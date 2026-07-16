@@ -56,6 +56,10 @@ urlpatterns = [
     "reports/",
     include("apps.reports.urls"),
 ),
+    path(
+    "shifts/",
+    include("apps.shifts.urls"),
+),
 ]
 
 if settings.DEBUG:

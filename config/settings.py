@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.kitchen.apps.KitchenConfig",
     "apps.inventory.apps.InventoryConfig",
     "apps.reports.apps.ReportsConfig",
+    "apps.shifts.apps.ShiftsConfig",
 ]
 
 MIDDLEWARE = [

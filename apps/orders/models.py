@@ -118,6 +118,14 @@ class Order(models.Model):
         blank=True,
         verbose_name="Thu ngân",
     )
+    shift = models.ForeignKey(
+    "shifts.WorkShift",
+    on_delete=models.SET_NULL,
+    related_name="orders",
+    null=True,
+    blank=True,
+    verbose_name="Ca làm việc",
+)
 
     customer_name = models.CharField(
         max_length=150,

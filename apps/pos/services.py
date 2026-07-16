@@ -20,6 +20,7 @@ from apps.orders.models import (
     PaymentMethod,
     PaymentStatus,
 )
+from apps.shifts.services import get_open_shift
 from apps.stores.models import Store
 
 from .cart import PosCart
@@ -176,7 +177,15 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
         if fulfillment_type == FulfillmentType.DINE_IN
         else "Khách nhận món tại quầy"
     )
+    shift = get_open_shift(
+        cashier=request.user,
+        store=store,
+    )
 
+    if shift is None:
+        raise PosOrderError(
+            "Bạn chưa mở ca bán hàng tại cửa hàng này."
+        )
     order = Order.objects.create(
         customer=None,
         store=store,
@@ -184,6 +193,7 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
         fulfillment_type=fulfillment_type,
         table_number=table_number,
         cashier=request.user,
+        shift=shift,
         customer_name=customer_name,
         customer_phone=cleaned_data.get("customer_phone", ""),
         customer_email="",

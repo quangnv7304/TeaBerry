@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Ca làm việc – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div class="mb-4">
+        <h1 class="fw-bold mb-1">
+            Ca làm việc
+        </h1>
+
+        <p class="text-muted mb-0">
+            Nhân viên:
+            {{ user.full_name|default:user.email }}
+        </p>
+    </div>
+
+    {% if current_shift %}
+        <div class="row g-4">
+            <div class="col-12 col-lg-7">
+                <article class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div
+                            class="d-flex justify-content-between gap-3"
+                        >
+                            <div>
+                                <div class="text-muted">
+                                    Ca hiện tại
+                                </div>
+
+                                <h2 class="h4">
+                                    {{ current_shift.store.name }}
+                                </h2>
+                            </div>
+
+                            <span class="badge text-bg-success align-self-start">
+                                Đang mở
+                            </span>
+                        </div>
+
+                        <hr>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <div class="text-muted small">
+                                    Tiền đầu ca
+                                </div>
+
+                                <strong class="fs-5">
+                                    {{ current_shift.opening_cash }}đ
+                                </strong>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <div class="text-muted small">
+                                    Doanh thu tiền mặt
+                                </div>
+
+                                <strong class="fs-5">
+                                    {{ cash_sales }}đ
+                                </strong>
+                            </div>
+
+                            <div class="col-12 col-md-4">
+                                <div class="text-muted small">
+                                    Dự kiến trong két
+                                </div>
+
+                                <strong class="fs-5 text-primary">
+                                    {{ current_shift.opening_cash|add:cash_sales }}đ
+                                </strong>
+                            </div>
+                        </div>
+
+                        <p class="small text-muted mt-3 mb-0">
+                            Mở lúc:
+                            {{ current_shift.opened_at|date:"H:i d/m/Y" }}
+                        </p>
+                    </div>
+                </article>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <aside class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h2 class="h5 mb-3">
+                            Đóng ca
+                        </h2>
+
+                        <form
+                            method="post"
+                            action="{% url 'shifts:close' current_shift.id %}"
+                        >
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ close_form.actual_cash.id_for_label }}"
+                                >
+                                    {{ close_form.actual_cash.label }}
+                                </label>
+
+                                {{ close_form.actual_cash }}
+                            </div>
+
+                            <div class="mb-3">
+                                <label
+                                    class="form-label"
+                                    for="{{ close_form.closing_note.id_for_label }}"
+                                >
+                                    {{ close_form.closing_note.label }}
+                                </label>
+
+                                {{ close_form.closing_note }}
+                            </div>
+
+                            <button
+                                type="submit"
+                                class="btn btn-danger w-100"
+                            >
+                                Xác nhận đóng ca
+                            </button>
+                        </form>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    {% else %}
+        <article
+            class="card border-0 shadow-sm"
+            style="max-width: 700px;"
+        >
+            <div class="card-body p-4">
+                <h2 class="h5 mb-3">
+                    Mở ca bán hàng
+                </h2>
+
+                <form
+                    method="post"
+                    action="{% url 'shifts:open' %}"
+                >
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Cửa hàng
+                        </label>
+
+                        <select
+                            name="store_id"
+                            class="form-select"
+                            required
+                        >
+                            <option value="">
+                                Chọn cửa hàng
+                            </option>
+
+                            {% for store in stores %}
+                                <option value="{{ store.id }}">
+                                    {{ store.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label
+                            class="form-label"
+                            for="{{ open_form.opening_cash.id_for_label }}"
+                        >
+                            {{ open_form.opening_cash.label }}
+                        </label>
+
+                        {{ open_form.opening_cash }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label
+                            class="form-label"
+                            for="{{ open_form.opening_note.id_for_label }}"
+                        >
+                            {{ open_form.opening_note.label }}
+                        </label>
+
+                        {{ open_form.opening_note }}
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        Mở ca
+                    </button>
+                </form>
+            </div>
+        </article>
+    {% endif %}
+
+    <section class="mt-5">
+        <h2 class="h4 fw-bold mb-3">
+            Lịch sử ca gần đây
+        </h2>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Cửa hàng</th>
+                        <th>Mở ca</th>
+                        <th>Đóng ca</th>
+                        <th>Tiền dự kiến</th>
+                        <th>Tiền thực tế</th>
+                        <th>Chênh lệch</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for shift in recent_shifts %}
+                        <tr>
+                            <td>{{ shift.store.name }}</td>
+
+                            <td>
+                                {{ shift.opened_at|date:"H:i d/m/Y" }}
+                            </td>
+
+                            <td>
+                                {% if shift.closed_at %}
+                                    {{ shift.closed_at|date:"H:i d/m/Y" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>{{ shift.expected_cash }}đ</td>
+
+                            <td>
+                                {% if shift.actual_cash != None %}
+                                    {{ shift.actual_cash }}đ
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if shift.cash_difference > 0 %}
+                                    <strong class="text-success">
+                                        +{{ shift.cash_difference }}đ
+                                    </strong>
+                                {% elif shift.cash_difference < 0 %}
+                                    <strong class="text-danger">
+                                        {{ shift.cash_difference }}đ
+                                    </strong>
+                                {% else %}
+                                    0đ
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ shift.get_status_display }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7">
+                                Chưa có lịch sử ca.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}
