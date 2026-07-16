@@ -11,6 +11,11 @@ urlpatterns = [
         name="dashboard",
     ),
     path(
+        "management/",
+        views.manager_shift_list_view,
+        name="manager-list",
+    ),
+    path(
         "open/",
         views.open_shift_view,
         name="open",

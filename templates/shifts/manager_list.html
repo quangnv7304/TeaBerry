@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Quản lý ca – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="
+            d-flex
+            justify-content-between
+            align-items-center
+            flex-wrap
+            gap-3
+            mb-4
+        "
+    >
+        <div>
+            <h1 class="fw-bold mb-1">
+                Quản lý ca làm việc
+            </h1>
+
+            <p class="text-muted mb-0">
+                Theo dõi ca, doanh thu và chênh lệch tiền mặt.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'shifts:dashboard' %}"
+            class="btn btn-outline-secondary"
+        >
+            Ca của tôi
+        </a>
+    </div>
+
+    <form
+        method="get"
+        class="card border-0 shadow-sm mb-4"
+    >
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-5">
+                    <label class="form-label">
+                        Cửa hàng
+                    </label>
+
+                    <select
+                        name="store"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Tất cả cửa hàng
+                        </option>
+
+                        {% for store in stores %}
+                            <option
+                                value="{{ store.id }}"
+                                {% if selected_store == store.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ store.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-5">
+                    <label class="form-label">
+                        Trạng thái
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select"
+                    >
+                        <option value="">
+                            Tất cả trạng thái
+                        </option>
+
+                        {% for value, label in status_choices %}
+                            <option
+                                value="{{ value }}"
+                                {% if selected_status == value %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div
+                    class="
+                        col-12
+                        col-md-2
+                        d-flex
+                        align-items-end
+                    "
+                >
+                    <button
+                        type="submit"
+                        class="btn btn-teaberry w-100"
+                    >
+                        Lọc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Tổng tiền đầu ca
+                    </div>
+
+                    <div class="h4 fw-bold mt-2">
+                        {{ summary.total_opening_cash|default:0 }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Tổng dự kiến
+                    </div>
+
+                    <div class="h4 fw-bold mt-2">
+                        {{ summary.total_expected_cash|default:0 }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Tổng thực tế
+                    </div>
+
+                    <div class="h4 fw-bold mt-2">
+                        {{ summary.total_actual_cash|default:0 }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Tổng chênh lệch
+                    </div>
+
+                    <div class="h4 fw-bold mt-2">
+                        {{ summary.total_difference|default:0 }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Cửa hàng</th>
+                            <th>Mở ca</th>
+                            <th>Đóng ca</th>
+                            <th>Số đơn</th>
+                            <th>Doanh thu</th>
+                            <th>Dự kiến</th>
+                            <th>Thực tế</th>
+                            <th>Chênh lệch</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for shift in shifts %}
+                            <tr>
+                                <td>
+                                    {{ shift.cashier.full_name|default:shift.cashier.email }}
+                                </td>
+
+                                <td>
+                                    {{ shift.store.name }}
+                                </td>
+
+                                <td>
+                                    {{ shift.opened_at|date:"H:i d/m/Y" }}
+                                </td>
+
+                                <td>
+                                    {% if shift.closed_at %}
+                                        {{ shift.closed_at|date:"H:i d/m/Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ shift.order_count }}
+                                </td>
+
+                                <td>
+                                    {{ shift.order_revenue|default:0 }}đ
+                                </td>
+
+                                <td>
+                                    {{ shift.expected_cash }}đ
+                                </td>
+
+                                <td>
+                                    {% if shift.actual_cash != None %}
+                                        {{ shift.actual_cash }}đ
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if shift.cash_difference > 0 %}
+                                        <strong class="text-success">
+                                            +{{ shift.cash_difference }}đ
+                                        </strong>
+                                    {% elif shift.cash_difference < 0 %}
+                                        <strong class="text-danger">
+                                            {{ shift.cash_difference }}đ
+                                        </strong>
+                                    {% else %}
+                                        0đ
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ shift.get_status_display }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="10">
+                                    Không có ca làm việc phù hợp.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

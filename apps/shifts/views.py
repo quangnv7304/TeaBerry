@@ -1,11 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db.models import Count, Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.accounts.models import UserRole
+from apps.pos.cart import PosCart
 from apps.stores.models import Store
 
 from .forms import CloseShiftForm, OpenShiftForm
@@ -79,6 +81,77 @@ def shift_dashboard_view(
 
 
 @login_required
+def manager_shift_list_view(
+    request: HttpRequest,
+) -> HttpResponse:
+    if not request.user.is_superuser:
+        if request.user.role not in {
+            UserRole.MANAGER,
+            UserRole.ADMIN,
+        }:
+            raise PermissionDenied(
+                "Bạn không có quyền xem tất cả ca làm việc."
+            )
+
+    selected_status = request.GET.get(
+        "status",
+        "",
+    )
+
+    selected_store = request.GET.get(
+        "store",
+        "",
+    )
+
+    shifts = (
+        WorkShift.objects
+        .select_related(
+            "store",
+            "cashier",
+        )
+        .annotate(
+            order_count=Count("orders"),
+            order_revenue=Sum("orders__total"),
+        )
+        .order_by("-opened_at")
+    )
+
+    if selected_status:
+        shifts = shifts.filter(
+            status=selected_status,
+        )
+
+    if selected_store:
+        shifts = shifts.filter(
+            store_id=selected_store,
+        )
+
+    summary = shifts.aggregate(
+        total_opening_cash=Sum("opening_cash"),
+        total_expected_cash=Sum("expected_cash"),
+        total_actual_cash=Sum("actual_cash"),
+        total_difference=Sum("cash_difference"),
+    )
+
+    stores = Store.objects.filter(
+        is_active=True,
+    ).order_by("name")
+
+    return render(
+        request,
+        "shifts/manager_list.html",
+        {
+            "shifts": shifts[:100],
+            "stores": stores,
+            "status_choices": ShiftStatus.choices,
+            "selected_status": selected_status,
+            "selected_store": selected_store,
+            "summary": summary,
+        },
+    )
+
+
+@login_required
 @require_POST
 def open_shift_view(
     request: HttpRequest,
@@ -127,6 +200,19 @@ def close_shift_view(
 ) -> HttpResponse:
     ensure_shift_access(request.user)
 
+    pos_cart = PosCart(request)
+
+    if len(pos_cart) > 0:
+        messages.error(
+            request,
+            (
+                "Không thể đóng ca vì đơn POS hiện tại "
+                "vẫn còn sản phẩm chưa thanh toán."
+            ),
+        )
+
+        return redirect("shifts:dashboard")
+
     shift = get_object_or_404(
         WorkShift,
         pk=shift_id,
@@ -159,6 +245,8 @@ def close_shift_view(
             str(exc),
         )
     else:
+        PosCart(request).clear()
+
         messages.success(
             request,
             (

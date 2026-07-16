@@ -24,6 +24,7 @@ from apps.orders.models import (
     Order,
     OrderSource,
 )
+from apps.shifts.services import get_open_shift
 
 from .cart import PosCart
 from .forms import PosCheckoutForm
@@ -48,6 +49,23 @@ def ensure_pos_access(user) -> None:
         raise PermissionDenied(
             "Bạn không có quyền sử dụng POS."
         )
+
+
+def get_required_open_shift(
+    *,
+    request: HttpRequest,
+):
+    shift = get_open_shift(
+        cashier=request.user,
+    )
+
+    if shift is None:
+        messages.warning(
+            request,
+            "Bạn chưa mở ca bán hàng.",
+        )
+
+    return shift
 
 
 @login_required
@@ -89,13 +107,17 @@ def pos_home_view(
         },
     )
 
-
 @login_required
 @require_POST
 def pos_add_item_view(
     request: HttpRequest,
 ) -> HttpResponse:
     ensure_pos_access(request.user)
+
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
 
     product = get_object_or_404(
         Product.objects.select_related("store"),
@@ -198,6 +220,11 @@ def pos_update_item_view(
 ) -> HttpResponse:
     ensure_pos_access(request.user)
 
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
+
     try:
         quantity = int(
             request.POST.get("quantity", 1)
@@ -222,6 +249,11 @@ def pos_remove_item_view(
 ) -> HttpResponse:
     ensure_pos_access(request.user)
 
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
+
     cart = PosCart(request)
     cart.remove(item_key=item_key)
 
@@ -240,6 +272,11 @@ def pos_clear_cart_view(
 ) -> HttpResponse:
     ensure_pos_access(request.user)
 
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
+
     cart = PosCart(request)
     cart.clear()
 
@@ -255,6 +292,11 @@ def pos_checkout_view(
     request: HttpRequest,
 ) -> HttpResponse:
     ensure_pos_access(request.user)
+
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
 
     cart = PosCart(request)
 
