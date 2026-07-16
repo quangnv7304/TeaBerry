@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.receipt.apps.ReceiptConfig",
     "apps.kitchen.apps.KitchenConfig",
     "apps.inventory.apps.InventoryConfig",
+    "apps.reports.apps.ReportsConfig",
 ]
 
 MIDDLEWARE = [

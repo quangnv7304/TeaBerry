@@ -190,6 +190,16 @@
             {% endfor %}
         </div>
     {% endif %}
+    {% if user.is_superuser or user.role == "MANAGER" or user.role == "ADMIN" %}
+    <li class="nav-item">
+        <a
+            class="nav-link"
+            href="{% url 'reports:revenue-dashboard' %}"
+        >
+            Báo cáo
+        </a>
+    </li>
+{% endif %}
 
     <main>
         {% block content %}{% endblock %}

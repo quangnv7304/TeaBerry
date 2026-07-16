@@ -52,6 +52,10 @@ urlpatterns = [
     "inventory/",
     include("apps.inventory.urls"),
 ),
+    path(
+    "reports/",
+    include("apps.reports.urls"),
+),
 ]
 
 if settings.DEBUG:

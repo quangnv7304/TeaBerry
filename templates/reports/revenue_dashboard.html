@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Báo cáo doanh thu – TeaBerry
+{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
+    >
+        <div>
+            <h1 class="fw-bold mb-1">
+                Báo cáo doanh thu
+            </h1>
+
+            <p class="text-muted mb-0">
+                Từ {{ start_date|date:"d/m/Y" }}
+                đến {{ end_date|date:"d/m/Y" }}
+            </p>
+        </div>
+
+        <form method="get">
+            <select
+                name="days"
+                class="form-select"
+                onchange="this.form.submit()"
+            >
+                <option
+                    value="7"
+                    {% if days == 7 %}selected{% endif %}
+                >
+                    7 ngày gần nhất
+                </option>
+
+                <option
+                    value="30"
+                    {% if days == 30 %}selected{% endif %}
+                >
+                    30 ngày gần nhất
+                </option>
+
+                <option
+                    value="90"
+                    {% if days == 90 %}selected{% endif %}
+                >
+                    90 ngày gần nhất
+                </option>
+            </select>
+        </form>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Tổng doanh thu
+                    </div>
+
+                    <div class="h3 fw-bold text-success mt-2">
+                        {{ summary.revenue }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Số đơn hoàn thành
+                    </div>
+
+                    <div class="display-6 fw-bold mt-2">
+                        {{ summary.order_count }}
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        Giá trị đơn trung bình
+                    </div>
+
+                    <div class="h3 fw-bold mt-2">
+                        {{ summary.average_order_value }}đ
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted">
+                        POS / Website
+                    </div>
+
+                    <div class="mt-2">
+                        <div>
+                            POS:
+                            <strong>
+                                {{ summary.pos_revenue }}đ
+                            </strong>
+                        </div>
+
+                        <div>
+                            Website:
+                            <strong>
+                                {{ summary.online_revenue }}đ
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <article class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-4">
+                        Doanh thu theo ngày
+                    </h2>
+
+                    <canvas
+                        id="revenue-chart"
+                        height="120"
+                    ></canvas>
+
+                    <div class="table-responsive mt-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Số đơn</th>
+                                    <th>Doanh thu</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for row in daily_revenue %}
+                                    <tr>
+                                        <td>
+                                            {{ row.date|date:"d/m/Y" }}
+                                        </td>
+
+                                        <td>
+                                            {{ row.order_count }}
+                                        </td>
+
+                                        <td>
+                                            <strong>
+                                                {{ row.revenue }}đ
+                                            </strong>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <aside class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">
+                        Sản phẩm bán chạy
+                    </h2>
+
+                    {% for product in top_products %}
+                        <article class="border-bottom py-3">
+                            <div
+                                class="d-flex justify-content-between gap-3"
+                            >
+                                <div>
+                                    <strong>
+                                        {{ product.product_name }}
+                                    </strong>
+
+                                    {% if product.variant_name %}
+                                        <div class="small text-muted">
+                                            {{ product.variant_name }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="text-end">
+                                    <strong>
+                                        {{ product.quantity_sold }}
+                                    </strong>
+
+                                    <div class="small text-muted">
+                                        {{ product.revenue }}đ
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <p class="text-muted">
+                            Chưa có dữ liệu bán hàng.
+                        </p>
+                    {% endfor %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{{ chart_labels|json_script:"revenue-chart-labels" }}
+{{ chart_values|json_script:"revenue-chart-values" }}
+
+<script>
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+            const labels = JSON.parse(
+                document.getElementById(
+                    "revenue-chart-labels"
+                ).textContent
+            );
+
+            const values = JSON.parse(
+                document.getElementById(
+                    "revenue-chart-values"
+                ).textContent
+            );
+
+            const canvas = document.getElementById(
+                "revenue-chart"
+            );
+
+            new Chart(
+                canvas,
+                {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Doanh thu",
+                                data: values,
+                                tension: 0.25,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                            },
+                        },
+                    },
+                }
+            );
+        }
+    );
+</script>
+{% endblock %}
