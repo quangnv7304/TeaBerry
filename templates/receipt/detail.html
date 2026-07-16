@@ -252,7 +252,18 @@
                 <strong>{{ order.subtotal }}đ</strong>
             </div>
 
-            {% if order.discount %}
+            {% if order.voucher_code %}
+                <div class="row">
+                    <span>
+                        Mã giảm:
+                        {{ order.voucher_code }}
+                    </span>
+
+                    <strong>
+                        -{{ order.discount }}đ
+                    </strong>
+                </div>
+            {% elif order.discount %}
                 <div class="row">
                     <span>Giảm giá:</span>
                     <strong>-{{ order.discount }}đ</strong>

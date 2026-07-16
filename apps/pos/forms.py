@@ -43,6 +43,18 @@ class PosCheckoutForm(forms.Form):
         ),
     )
 
+    voucher_code = forms.CharField(
+        required=False,
+        max_length=50,
+        label="Mã giảm giá",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control text-uppercase",
+                "placeholder": "Ví dụ: WELCOME20",
+            }
+        ),
+    )
+
     table_number = forms.CharField(
         max_length=20,
         required=False,

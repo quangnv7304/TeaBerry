@@ -237,7 +237,42 @@ def create_order_from_cart(
         subtotal=subtotal,
     )
 
+    customer = (
+        request.user
+        if request.user.is_authenticated
+        else None
+    )
+
     discount = 0
+    voucher = None
+    voucher_code = cleaned_data.get(
+        "voucher_code",
+        "",
+    ).strip()
+
+    if voucher_code:
+        from apps.promotions.services import (
+            VoucherError,
+            validate_voucher,
+        )
+
+        try:
+            voucher_result = validate_voucher(
+                code=voucher_code,
+                subtotal=subtotal,
+                store=store,
+                customer=customer,
+                customer_phone=cleaned_data[
+                    "customer_phone"
+                ],
+            )
+        except VoucherError as exc:
+            raise OrderCreationError(
+                str(exc)
+            ) from exc
+
+        voucher = voucher_result.voucher
+        discount = voucher_result.discount_amount
 
     total = max(
         0,
@@ -250,12 +285,6 @@ def create_order_from_cart(
         payment_status = PaymentStatus.PENDING
     else:
         payment_status = PaymentStatus.UNPAID
-
-    customer = (
-        request.user
-        if request.user.is_authenticated
-        else None
-    )
 
     try:
         order = Order.objects.create(
@@ -277,6 +306,11 @@ def create_order_from_cart(
             subtotal=subtotal,
             shipping_fee=shipping_fee,
             discount=discount,
+            voucher_code=(
+                voucher.code
+                if voucher
+                else ""
+            ),
             total=total,
             payment_method=payment_method,
             payment_status=payment_status,
@@ -330,6 +364,25 @@ def create_order_from_cart(
             changed_by=customer,
             note="Đơn hàng được tạo.",
         )
+
+    if voucher is not None:
+        from apps.promotions.services import (
+            VoucherError,
+            redeem_voucher,
+        )
+
+        try:
+            redeem_voucher(
+                order=order,
+                voucher=voucher,
+                discount_amount=discount,
+                customer=customer,
+                customer_phone=order.customer_phone,
+            )
+        except VoucherError as exc:
+            raise OrderCreationError(
+                str(exc)
+            ) from exc
 
     if order.payment_method == PaymentMethod.BANK_TRANSFER:
         from apps.payment.services import get_or_create_bank_transfer_payment

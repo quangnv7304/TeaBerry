@@ -169,6 +169,42 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
 
     store = Store.objects.get(pk=next(iter(store_ids)), is_active=True)
     subtotal = sum(item.line_total for item in validated_items)
+    discount = 0
+    voucher = None
+    voucher_code = cleaned_data.get(
+        "voucher_code",
+        "",
+    ).strip()
+
+    if voucher_code:
+        from apps.promotions.services import (
+            VoucherError,
+            validate_voucher,
+        )
+
+        try:
+            voucher_result = validate_voucher(
+                code=voucher_code,
+                subtotal=subtotal,
+                store=store,
+                customer=None,
+                customer_phone=cleaned_data.get(
+                    "customer_phone",
+                    "",
+                ),
+            )
+        except VoucherError as exc:
+            raise PosOrderError(
+                str(exc)
+            ) from exc
+
+        voucher = voucher_result.voucher
+        discount = voucher_result.discount_amount
+
+    total = max(
+        0,
+        subtotal - discount,
+    )
     customer_name = cleaned_data.get("customer_name", "").strip() or "Khách lẻ"
     fulfillment_type = cleaned_data["fulfillment_type"]
     table_number = cleaned_data.get("table_number", "").strip()
@@ -201,8 +237,13 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
         delivery_note=cleaned_data.get("note", "").strip(),
         subtotal=subtotal,
         shipping_fee=0,
-        discount=0,
-        total=subtotal,
+        discount=discount,
+        voucher_code=(
+            voucher.code
+            if voucher
+            else ""
+        ),
+        total=total,
         payment_method=PaymentMethod.CASH,
         payment_status=PaymentStatus.PAID,
         status=OrderStatus.CONFIRMED,
@@ -243,6 +284,25 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
         changed_by=request.user,
         note="Đơn được tạo và thanh toán tiền mặt tại POS.",
     )
+
+    if voucher is not None:
+        from apps.promotions.services import (
+            VoucherError,
+            redeem_voucher,
+        )
+
+        try:
+            redeem_voucher(
+                order=order,
+                voucher=voucher,
+                discount_amount=discount,
+                customer=None,
+                customer_phone=order.customer_phone,
+            )
+        except VoucherError as exc:
+            raise PosOrderError(
+                str(exc)
+            ) from exc
 
     cart.clear()
     return order

@@ -117,6 +117,7 @@ def checkout_view(
     shipping_fee = calculate_shipping_fee(
         subtotal=subtotal,
     )
+    discount = 0
 
     return render(
         request,
@@ -126,7 +127,8 @@ def checkout_view(
             "cart": cart,
             "subtotal": subtotal,
             "shipping_fee": shipping_fee,
-            "total": subtotal + shipping_fee,
+            "discount": discount,
+            "total": subtotal + shipping_fee - discount,
         },
     )
 

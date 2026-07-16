@@ -74,6 +74,11 @@ def pos_home_view(
 ) -> HttpResponse:
     ensure_pos_access(request.user)
 
+    if get_required_open_shift(
+        request=request,
+    ) is None:
+        return redirect("shifts:dashboard")
+
     products = (
         Product.objects
         .filter(

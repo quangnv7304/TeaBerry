@@ -112,6 +112,27 @@
                             {% endfor %}
                         </div>
 
+                        <div class="mb-4">
+                            <label
+                                class="form-label"
+                                for="{{ form.voucher_code.id_for_label }}"
+                            >
+                                {{ form.voucher_code.label }}
+                            </label>
+
+                            {{ form.voucher_code }}
+
+                            <div class="form-text">
+                                Nhập mã khuyến mãi nếu bạn có.
+                            </div>
+
+                            {% for error in form.voucher_code.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
                         <h2 class="h5 mb-3">
                             Phương thức thanh toán
                         </h2>
@@ -177,6 +198,16 @@
                             <span>Phí giao hàng</span>
                             <strong>{{ shipping_fee }}đ</strong>
                         </div>
+
+                        {% if discount %}
+                            <div class="d-flex justify-content-between mt-2">
+                                <span>Giảm giá</span>
+
+                                <strong class="text-success">
+                                    -{{ discount }}đ
+                                </strong>
+                            </div>
+                        {% endif %}
 
                         <hr>
 

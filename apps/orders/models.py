@@ -166,6 +166,12 @@ class Order(models.Model):
         verbose_name="Giảm giá",
     )
 
+    voucher_code = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Mã giảm giá",
+    )
+
     total = models.PositiveBigIntegerField(
         default=0,
         verbose_name="Tổng thanh toán",

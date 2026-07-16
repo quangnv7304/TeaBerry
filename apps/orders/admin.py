@@ -46,6 +46,8 @@ class OrderAdmin(admin.ModelAdmin):
         "order_code",
         "customer_name",
         "customer_phone",
+        "voucher_code",
+        "discount",
         "total",
         "payment_method",
         "payment_status",
@@ -66,6 +68,7 @@ class OrderAdmin(admin.ModelAdmin):
         "customer_name",
         "customer_phone",
         "customer_email",
+        "voucher_code",
     )
 
     readonly_fields = (

@@ -49,6 +49,18 @@
                     {{ order.shipping_address }}
                 </p>
 
+                {% if order.voucher_code %}
+                    <p>
+                        <strong>Mã giảm giá:</strong>
+                        {{ order.voucher_code }}
+                    </p>
+
+                    <p>
+                        <strong>Số tiền giảm:</strong>
+                        -{{ order.discount }}đ
+                    </p>
+                {% endif %}
+
                 <p>
                     <strong>Tổng thanh toán:</strong>
                     {{ order.total }}đ
