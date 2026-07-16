@@ -510,6 +510,22 @@ def change_order_status(
             note=note,
         )
 
+    if new_status == OrderStatus.COMPLETED:
+        from apps.loyalty.services import (
+            LoyaltyError,
+            earn_points_for_order,
+        )
+
+        try:
+            earn_points_for_order(
+                order_id=order.id,
+                actor=actor,
+            )
+        except LoyaltyError as exc:
+            raise InvalidOrderStatusTransition(
+                str(exc)
+            ) from exc
+
     return order
 
 def ensure_order_staff(user) -> None:

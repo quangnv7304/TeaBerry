@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.reports.apps.ReportsConfig",
     "apps.shifts.apps.ShiftsConfig",
     "apps.promotions.apps.PromotionsConfig",
+    "apps.loyalty.apps.LoyaltyConfig",
 ]
 
 MIDDLEWARE = [

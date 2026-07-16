@@ -59,7 +59,11 @@ urlpatterns = [
     path(
     "shifts/",
     include("apps.shifts.urls"),
-),
+    ),
+    path(
+        "loyalty/",
+        include("apps.loyalty.urls"),
+    ),
 ]
 
 if settings.DEBUG:

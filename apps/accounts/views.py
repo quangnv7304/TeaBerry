@@ -18,6 +18,21 @@ from .forms import (
 from .models import Address
 from .services import save_address, set_default_address
 
+
+@login_required
+def loyalty_view(request):
+    from apps.loyalty.models import LoyaltyAccount
+
+    account, _ = LoyaltyAccount.objects.get_or_create(
+        customer=request.user,
+    )
+    transactions = account.transactions.select_related("order")[:10]
+    return render(
+        request,
+        "accounts/loyalty.html",
+        {"account": account, "transactions": transactions},
+    )
+
 class TeaBerryLoginView(LoginView):
     template_name = "accounts/login.html"
     authentication_form = TeaBerryLoginForm
