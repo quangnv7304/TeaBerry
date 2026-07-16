@@ -17,6 +17,8 @@ staticfiles/
 
 # Environment
 .env
+.env.*
+!.env.example
 
 # VSCode
 .vscode/
@@ -25,6 +27,7 @@ staticfiles/
 .idea/
 
 # Logs
+logs/
 *.log
 
 # Windows
