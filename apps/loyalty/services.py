@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from django.db import transaction
 
 from apps.orders.models import Order, OrderStatus
@@ -15,8 +17,16 @@ class LoyaltyError(Exception):
 
 
 POINT_VALUE_IN_VND = 10_000
-REDEEM_POINTS = 100
-REDEEM_VALUE = 10_000
+POINTS_TO_REDEEM_UNIT = 100
+REDEEM_VALUE_PER_UNIT = 10_000
+REDEEM_POINTS = POINTS_TO_REDEEM_UNIT
+REDEEM_VALUE = REDEEM_VALUE_PER_UNIT
+
+
+@dataclass(frozen=True)
+class LoyaltyRedemptionResult:
+    points_used: int
+    discount_amount: int
 
 TIER_THRESHOLDS = (
     (5_000, LoyaltyTier.PLATINUM),
@@ -37,6 +47,42 @@ def determine_loyalty_tier(*, lifetime_points: int) -> str:
         if lifetime_points >= minimum_points:
             return tier
     return LoyaltyTier.MEMBER
+
+
+def calculate_redemption_discount(
+    *,
+    requested_points: int,
+    available_points: int,
+    payable_amount: int,
+) -> LoyaltyRedemptionResult:
+    if requested_points < 0:
+        raise LoyaltyError("Số điểm đổi không hợp lệ.")
+    if requested_points == 0:
+        return LoyaltyRedemptionResult(points_used=0, discount_amount=0)
+    if requested_points > available_points:
+        raise LoyaltyError("Bạn không đủ điểm để đổi.")
+
+    usable_points = (
+        requested_points // POINTS_TO_REDEEM_UNIT
+        * POINTS_TO_REDEEM_UNIT
+    )
+    if usable_points <= 0:
+        raise LoyaltyError("Số điểm đổi tối thiểu là 100 điểm.")
+
+    discount_amount = (
+        usable_points // POINTS_TO_REDEEM_UNIT
+        * REDEEM_VALUE_PER_UNIT
+    )
+    discount_amount = min(discount_amount, max(0, int(payable_amount)))
+    if discount_amount <= 0:
+        return LoyaltyRedemptionResult(points_used=0, discount_amount=0)
+
+    actual_units = discount_amount // REDEEM_VALUE_PER_UNIT
+    actual_points_used = actual_units * POINTS_TO_REDEEM_UNIT
+    return LoyaltyRedemptionResult(
+        points_used=actual_points_used,
+        discount_amount=actual_units * REDEEM_VALUE_PER_UNIT,
+    )
 
 
 @transaction.atomic
@@ -90,6 +136,63 @@ def earn_points_for_order(*, order_id, actor=None) -> LoyaltyTransaction | None:
         note=f"Tích điểm từ đơn {order.order_code}",
         created_by=actor,
     )
+
+
+@transaction.atomic
+def redeem_points_for_order(
+    *,
+    order: Order,
+    customer,
+    requested_points: int,
+    payable_amount: int,
+    actor=None,
+) -> LoyaltyRedemptionResult:
+    if customer is None:
+        raise LoyaltyError("Khách cần đăng nhập để đổi điểm.")
+
+    try:
+        account = LoyaltyAccount.objects.select_for_update().get(
+            customer=customer,
+            is_active=True,
+        )
+    except LoyaltyAccount.DoesNotExist as exc:
+        raise LoyaltyError("Bạn chưa có tài khoản điểm thưởng.") from exc
+
+    existing_transaction = LoyaltyTransaction.objects.filter(
+        account=account,
+        order=order,
+        transaction_type=LoyaltyTransactionType.REDEEM,
+    ).first()
+    if existing_transaction is not None:
+        points_used = abs(existing_transaction.points)
+        return LoyaltyRedemptionResult(
+            points_used=points_used,
+            discount_amount=(
+                points_used // POINTS_TO_REDEEM_UNIT
+                * REDEEM_VALUE_PER_UNIT
+            ),
+        )
+
+    result = calculate_redemption_discount(
+        requested_points=requested_points,
+        available_points=account.available_points,
+        payable_amount=payable_amount,
+    )
+    if result.points_used == 0:
+        return result
+
+    account.available_points -= result.points_used
+    account.save(update_fields=["available_points", "updated_at"])
+    LoyaltyTransaction.objects.create(
+        account=account,
+        order=order,
+        transaction_type=LoyaltyTransactionType.REDEEM,
+        points=-result.points_used,
+        balance_after=account.available_points,
+        note=f"Đổi điểm cho đơn {order.order_code}",
+        created_by=actor,
+    )
+    return result
 
 
 @transaction.atomic

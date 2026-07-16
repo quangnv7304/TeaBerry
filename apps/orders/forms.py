@@ -83,6 +83,20 @@ class CheckoutForm(forms.Form):
         ),
     )
 
+    loyalty_points = forms.IntegerField(
+        required=False,
+        min_value=0,
+        initial=0,
+        label="Điểm thưởng muốn đổi",
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control",
+                "step": "100",
+                "placeholder": "Ví dụ: 100",
+            }
+        ),
+    )
+
     payment_method = forms.ChoiceField(
         choices=PaymentMethod.choices,
         initial=PaymentMethod.COD,

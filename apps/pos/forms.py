@@ -43,6 +43,30 @@ class PosCheckoutForm(forms.Form):
         ),
     )
 
+    customer_email = forms.EmailField(
+        required=False,
+        label="Email tài khoản khách",
+        widget=forms.EmailInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Dùng khi đổi điểm",
+            }
+        ),
+    )
+
+    loyalty_points = forms.IntegerField(
+        required=False,
+        min_value=0,
+        initial=0,
+        label="Điểm muốn đổi",
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control",
+                "step": "100",
+            }
+        ),
+    )
+
     voucher_code = forms.CharField(
         required=False,
         max_length=50,

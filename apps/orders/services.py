@@ -274,7 +274,12 @@ def create_order_from_cart(
         voucher = voucher_result.voucher
         discount = voucher_result.discount_amount
 
-    total = max(
+    loyalty_points_used = 0
+    loyalty_discount = 0
+    requested_loyalty_points = int(
+        cleaned_data.get("loyalty_points", 0) or 0
+    )
+    payable_before_loyalty = max(
         0,
         subtotal + shipping_fee - discount,
     )
@@ -311,7 +316,9 @@ def create_order_from_cart(
                 if voucher
                 else ""
             ),
-            total=total,
+            loyalty_points_used=0,
+            loyalty_discount=0,
+            total=payable_before_loyalty,
             payment_method=payment_method,
             payment_status=payment_status,
             
@@ -383,6 +390,43 @@ def create_order_from_cart(
             raise OrderCreationError(
                 str(exc)
             ) from exc
+
+    if requested_loyalty_points > 0:
+        from apps.loyalty.services import (
+            LoyaltyError,
+            redeem_points_for_order,
+        )
+
+        try:
+            loyalty_result = redeem_points_for_order(
+                order=order,
+                customer=customer,
+                requested_points=requested_loyalty_points,
+                payable_amount=payable_before_loyalty,
+                actor=customer,
+            )
+        except LoyaltyError as exc:
+            raise OrderCreationError(
+                str(exc)
+            ) from exc
+
+        loyalty_points_used = loyalty_result.points_used
+        loyalty_discount = loyalty_result.discount_amount
+
+    order.loyalty_points_used = loyalty_points_used
+    order.loyalty_discount = loyalty_discount
+    order.discount = discount + loyalty_discount
+    order.total = max(
+        0,
+        subtotal + shipping_fee - order.discount,
+    )
+    order.save(update_fields=[
+        "loyalty_points_used",
+        "loyalty_discount",
+        "discount",
+        "total",
+        "updated_at",
+    ])
 
     if order.payment_method == PaymentMethod.BANK_TRANSFER:
         from apps.payment.services import get_or_create_bank_transfer_payment

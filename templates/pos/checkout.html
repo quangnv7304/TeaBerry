@@ -71,6 +71,27 @@
                         <div class="mb-3">
                             <label
                                 class="form-label"
+                                for="{{ form.customer_email.id_for_label }}"
+                            >
+                                {{ form.customer_email.label }}
+                            </label>
+                            {{ form.customer_email }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                class="form-label"
+                                for="{{ form.loyalty_points.id_for_label }}"
+                            >
+                                {{ form.loyalty_points.label }}
+                            </label>
+                            {{ form.loyalty_points }}
+                            <div class="form-text">100 điểm = 10.000đ.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label
+                                class="form-label"
                                 for="{{ form.voucher_code.id_for_label }}"
                             >
                                 {{ form.voucher_code.label }}

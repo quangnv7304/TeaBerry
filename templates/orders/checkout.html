@@ -133,6 +133,27 @@
                             {% endfor %}
                         </div>
 
+                        {% if user.is_authenticated %}
+                        <div class="mb-4">
+                            <label
+                                class="form-label"
+                                for="{{ form.loyalty_points.id_for_label }}"
+                            >
+                                {{ form.loyalty_points.label }}
+                            </label>
+
+                            {{ form.loyalty_points }}
+
+                            <div class="form-text">
+                                100 điểm = 10.000đ. Chỉ nhập bội số của 100.
+                            </div>
+
+                            {% for error in form.loyalty_points.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
                         <h2 class="h5 mb-3">
                             Phương thức thanh toán
                         </h2>

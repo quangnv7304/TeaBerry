@@ -260,13 +260,26 @@
                     </span>
 
                     <strong>
-                        -{{ order.discount }}đ
+                        -{{ order.voucher_discount }}đ
                     </strong>
                 </div>
-            {% elif order.discount %}
+            {% elif order.voucher_discount %}
                 <div class="row">
                     <span>Giảm giá:</span>
-                    <strong>-{{ order.discount }}đ</strong>
+                    <strong>-{{ order.voucher_discount }}đ</strong>
+                </div>
+            {% endif %}
+
+            {% if order.loyalty_points_used %}
+                <div class="row">
+                    <span>
+                        Điểm đã dùng:
+                        {{ order.loyalty_points_used }}
+                    </span>
+
+                    <strong>
+                        -{{ order.loyalty_discount }}đ
+                    </strong>
                 </div>
             {% endif %}
 

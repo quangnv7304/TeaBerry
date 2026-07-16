@@ -8,10 +8,43 @@ from apps.loyalty.models import (
 )
 from apps.loyalty.services import (
     LoyaltyError,
+    calculate_redemption_discount,
     calculate_loyalty_points,
     redeem_points,
+    redeem_points_for_order,
     update_tier,
 )
+
+
+def test_calculate_redemption_discount_uses_complete_units():
+    result = calculate_redemption_discount(
+        requested_points=250,
+        available_points=500,
+        payable_amount=100_000,
+    )
+
+    assert result.points_used == 200
+    assert result.discount_amount == 20_000
+
+
+def test_redemption_discount_does_not_exceed_payable_amount():
+    result = calculate_redemption_discount(
+        requested_points=200,
+        available_points=500,
+        payable_amount=15_000,
+    )
+
+    assert result.points_used == 100
+    assert result.discount_amount == 10_000
+
+
+def test_redemption_requires_at_least_one_complete_unit():
+    with pytest.raises(LoyaltyError):
+        calculate_redemption_discount(
+            requested_points=99,
+            available_points=500,
+            payable_amount=100_000,
+        )
 
 
 @pytest.mark.parametrize(
@@ -70,6 +103,66 @@ def test_redeem_points_returns_discount(django_user_model):
     assert discount == 10_000
     assert account.available_points == 280
     assert account.transactions.get().points == -100
+
+
+@pytest.mark.django_db
+def test_redeem_points_deducts_balance(django_user_model):
+    from apps.accounts.models import UserRole
+    from apps.orders.models import (
+        FulfillmentType,
+        Order,
+        OrderSource,
+        OrderStatus,
+        PaymentMethod,
+        PaymentStatus,
+    )
+    from apps.stores.models import Store
+
+    customer = django_user_model.objects.create_user(
+        email="redeem@teaberry.local",
+        password="StrongPassword123!",
+        role=UserRole.CUSTOMER,
+    )
+    loyalty_account = LoyaltyAccount.objects.create(
+        customer=customer,
+        available_points=500,
+        lifetime_points=500,
+        tier=LoyaltyTier.SILVER,
+    )
+    store = Store.objects.create(
+        name="TeaBerry Redeem",
+        code="TB-REDEEM",
+        is_active=True,
+    )
+    order = Order.objects.create(
+        customer=customer,
+        store=store,
+        source=OrderSource.ONLINE,
+        fulfillment_type=FulfillmentType.DELIVERY,
+        customer_name="Redeem User",
+        customer_phone="0900000002",
+        customer_email=customer.email,
+        shipping_address="Hải Phòng",
+        subtotal=100_000,
+        shipping_fee=0,
+        discount=0,
+        total=100_000,
+        payment_method=PaymentMethod.COD,
+        payment_status=PaymentStatus.PENDING,
+        status=OrderStatus.PENDING,
+    )
+
+    result = redeem_points_for_order(
+        order=order,
+        customer=customer,
+        requested_points=200,
+        payable_amount=100_000,
+    )
+    loyalty_account.refresh_from_db()
+
+    assert result.points_used == 200
+    assert result.discount_amount == 20_000
+    assert loyalty_account.available_points == 300
 
 
 @pytest.mark.django_db

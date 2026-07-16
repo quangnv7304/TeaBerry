@@ -172,6 +172,20 @@ class Order(models.Model):
         verbose_name="Mã giảm giá",
     )
 
+    loyalty_points_used = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Điểm thưởng đã dùng",
+    )
+
+    loyalty_discount = models.PositiveBigIntegerField(
+        default=0,
+        verbose_name="Giảm giá từ điểm thưởng",
+    )
+
+    @property
+    def voucher_discount(self) -> int:
+        return max(0, self.discount - self.loyalty_discount)
+
     total = models.PositiveBigIntegerField(
         default=0,
         verbose_name="Tổng thanh toán",

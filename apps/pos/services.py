@@ -169,6 +169,23 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
 
     store = Store.objects.get(pk=next(iter(store_ids)), is_active=True)
     subtotal = sum(item.line_total for item in validated_items)
+    customer = None
+    customer_email = cleaned_data.get(
+        "customer_email",
+        "",
+    ).strip().lower()
+
+    if customer_email:
+        from apps.accounts.models import User
+
+        customer = User.objects.filter(
+            email__iexact=customer_email,
+        ).first()
+        if customer is None:
+            raise PosOrderError(
+                "Không tìm thấy tài khoản khách hàng."
+            )
+
     discount = 0
     voucher = None
     voucher_code = cleaned_data.get(
@@ -187,7 +204,7 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
                 code=voucher_code,
                 subtotal=subtotal,
                 store=store,
-                customer=None,
+                customer=customer,
                 customer_phone=cleaned_data.get(
                     "customer_phone",
                     "",
@@ -223,7 +240,7 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
             "Bạn chưa mở ca bán hàng tại cửa hàng này."
         )
     order = Order.objects.create(
-        customer=None,
+        customer=customer,
         store=store,
         source=OrderSource.POS,
         fulfillment_type=fulfillment_type,
@@ -232,7 +249,7 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
         shift=shift,
         customer_name=customer_name,
         customer_phone=cleaned_data.get("customer_phone", ""),
-        customer_email="",
+        customer_email=customer_email,
         shipping_address=shipping_address,
         delivery_note=cleaned_data.get("note", "").strip(),
         subtotal=subtotal,
@@ -296,13 +313,47 @@ def create_pos_order(*, request, cleaned_data: dict) -> Order:
                 order=order,
                 voucher=voucher,
                 discount_amount=discount,
-                customer=None,
+                customer=customer,
                 customer_phone=order.customer_phone,
             )
         except VoucherError as exc:
             raise PosOrderError(
                 str(exc)
             ) from exc
+
+    requested_loyalty_points = int(
+        cleaned_data.get("loyalty_points", 0) or 0
+    )
+    if requested_loyalty_points > 0:
+        from apps.loyalty.services import (
+            LoyaltyError,
+            redeem_points_for_order,
+        )
+
+        try:
+            loyalty_result = redeem_points_for_order(
+                order=order,
+                customer=customer,
+                requested_points=requested_loyalty_points,
+                payable_amount=subtotal - discount,
+                actor=request.user,
+            )
+        except LoyaltyError as exc:
+            raise PosOrderError(
+                str(exc)
+            ) from exc
+
+        order.loyalty_points_used = loyalty_result.points_used
+        order.loyalty_discount = loyalty_result.discount_amount
+        order.discount = discount + loyalty_result.discount_amount
+        order.total = max(0, subtotal - order.discount)
+        order.save(update_fields=[
+            "loyalty_points_used",
+            "loyalty_discount",
+            "discount",
+            "total",
+            "updated_at",
+        ])
 
     cart.clear()
     return order

@@ -113,6 +113,14 @@ class LoyaltyTransaction(models.Model):
                 ),
                 name="unique_loyalty_earn_per_order",
             ),
+            models.UniqueConstraint(
+                fields=("account", "order", "transaction_type"),
+                condition=models.Q(
+                    order__isnull=False,
+                    transaction_type=LoyaltyTransactionType.REDEEM,
+                ),
+                name="unique_loyalty_redeem_per_order",
+            ),
             models.CheckConstraint(
                 condition=~models.Q(points=0),
                 name="loyalty_transaction_points_not_zero",

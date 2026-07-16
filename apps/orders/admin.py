@@ -77,6 +77,8 @@ class OrderAdmin(admin.ModelAdmin):
         "subtotal",
         "shipping_fee",
         "discount",
+        "loyalty_points_used",
+        "loyalty_discount",
         "total",
         "created_at",
         "updated_at",
