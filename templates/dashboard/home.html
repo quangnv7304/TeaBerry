@@ -1,206 +1,42 @@
 {% extends "base.html" %}
 
-{% block title %}
-    Dashboard – TeaBerry
-{% endblock %}
+{% block title %}Dashboard – TeaBerry{% endblock %}
+{% block body_class %}admin-workspace{% endblock %}
 
 {% block content %}
-<section class="container py-5">
-    <div
-        class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
-    >
-        <div>
-            <h1 class="fw-bold mb-1">
-                TeaBerry Dashboard
-            </h1>
+<div class="admin-shell page-enter">
+    <aside class="admin-sidebar">
+        <div class="admin-nav-label">Vận hành</div>
+        <a class="active" href="{% url 'dashboard:home' %}"><i class="bi bi-grid-1x2-fill"></i>Dashboard</a>
+        <a href="{% url 'orders:staff-list' %}"><i class="bi bi-receipt"></i>Đơn hàng</a>
+        <a href="{% url 'pos:home' %}"><i class="bi bi-calculator"></i>POS bán hàng</a>
+        <a href="{% url 'catalog:product-list' %}"><i class="bi bi-cup-straw"></i>Sản phẩm</a>
+        <div class="admin-nav-label mt-4">Quản lý</div>
+        <a href="{% url 'inventory:dashboard' %}"><i class="bi bi-box-seam"></i>Kho nguyên liệu</a>
+        <a href="{% url 'shifts:dashboard' %}"><i class="bi bi-people"></i>Ca làm việc</a>
+        <a href="{% url 'reports:revenue-dashboard' %}"><i class="bi bi-bar-chart"></i>Báo cáo</a>
+        {% if user.is_superuser %}<a href="{% url 'admin:index' %}"><i class="bi bi-gear"></i>Cài đặt</a>{% endif %}
+    </aside>
 
-            <p class="text-muted mb-0">
-                Theo dõi và xử lý đơn hàng trong ngày.
-            </p>
+    <main class="admin-main">
+        <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div><div class="section-kicker mb-1">Tổng quan hôm nay</div><h1 class="h2 fw-bold mb-1">Xin chào, {{ user.full_name|default:"TeaBerry team" }}</h1><p class="text-muted mb-0">Theo dõi hoạt động cửa hàng theo thời gian thực.</p></div>
+            <a href="{% url 'pos:home' %}" class="btn btn-teaberry px-4"><i class="bi bi-plus-lg me-2"></i>Tạo đơn tại quầy</a>
+        </header>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-xl-3"><article class="metric-card"><span class="metric-icon berry"><i class="bi bi-cash-stack"></i></span><div><small>Doanh thu hôm nay</small><strong>{{ completed_revenue }}₫</strong><em><i class="bi bi-arrow-up"></i> Đã hoàn tất</em></div></article></div>
+            <div class="col-6 col-xl-3"><article class="metric-card"><span class="metric-icon green"><i class="bi bi-bag-check"></i></span><div><small>Tổng đơn hàng</small><strong>{{ today_order_count }}</strong><em>{{ pending_count }} đơn mới</em></div></article></div>
+            <div class="col-6 col-xl-3"><article class="metric-card"><span class="metric-icon orange"><i class="bi bi-cup-hot"></i></span><div><small>Đang pha chế</small><strong>{{ preparing_count }}</strong><em>Cần theo dõi</em></div></article></div>
+            <div class="col-6 col-xl-3"><article class="metric-card"><span class="metric-icon blue"><i class="bi bi-bicycle"></i></span><div><small>Đang giao</small><strong>{{ delivering_count }}</strong><em>Trên đường giao</em></div></article></div>
         </div>
 
-        <a
-            href="{% url 'orders:staff-list' %}"
-            class="btn btn-teaberry"
-        >
-            Xem toàn bộ đơn
-        </a>
-    </div>
-
-    <!-- Thống kê -->
-    <div class="row g-3 mb-5">
-        <div class="col-12 col-sm-6 col-xl-3">
-            <article class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted mb-2">
-                        Tổng đơn hôm nay
-                    </div>
-
-                    <div class="display-6 fw-bold">
-                        {{ today_order_count }}
-                    </div>
-                </div>
-            </article>
+        <div class="row g-4 mb-4">
+            <div class="col-xl-8"><section class="admin-panel h-100"><div class="d-flex justify-content-between align-items-center mb-4"><div><h2 class="h5 fw-bold mb-1">Nhịp độ đơn hàng</h2><span class="text-muted small">Tình trạng xử lý hôm nay</span></div><span class="badge rounded-pill text-bg-light">Live</span></div><div class="status-chart"><div class="chart-column"><div class="chart-bar pending" style="--value: {% widthratio pending_count today_order_count 100 %}%"></div><span>Đơn mới</span><strong>{{ pending_count }}</strong></div><div class="chart-column"><div class="chart-bar preparing" style="--value: {% widthratio preparing_count today_order_count 100 %}%"></div><span>Đang pha</span><strong>{{ preparing_count }}</strong></div><div class="chart-column"><div class="chart-bar delivering" style="--value: {% widthratio delivering_count today_order_count 100 %}%"></div><span>Đang giao</span><strong>{{ delivering_count }}</strong></div><div class="chart-column"><div class="chart-bar complete" style="--value: 78%"></div><span>Tổng đơn</span><strong>{{ today_order_count }}</strong></div></div></section></div>
+            <div class="col-xl-4"><section class="admin-panel h-100"><h2 class="h5 fw-bold mb-1">Truy cập nhanh</h2><p class="text-muted small mb-3">Công việc thường dùng</p><div class="quick-grid"><a href="{% url 'orders:staff-list' %}"><i class="bi bi-receipt-cutoff"></i><span>Xử lý đơn</span></a><a href="{% url 'kitchen:board' %}"><i class="bi bi-fire"></i><span>Bếp / Pha chế</span></a><a href="{% url 'inventory:dashboard' %}"><i class="bi bi-boxes"></i><span>Kiểm tra kho</span></a><a href="{% url 'reports:revenue-dashboard' %}"><i class="bi bi-graph-up-arrow"></i><span>Xem báo cáo</span></a></div></section></div>
         </div>
 
-        <div class="col-12 col-sm-6 col-xl-3">
-            <article class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted mb-2">
-                        Chờ xác nhận
-                    </div>
-
-                    <div class="display-6 fw-bold text-warning">
-                        {{ pending_count }}
-                    </div>
-                </div>
-            </article>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <article class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted mb-2">
-                        Đang pha chế
-                    </div>
-
-                    <div class="display-6 fw-bold text-primary">
-                        {{ preparing_count }}
-                    </div>
-                </div>
-            </article>
-        </div>
-
-        <div class="col-12 col-sm-6 col-xl-3">
-            <article class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-muted mb-2">
-                        Doanh thu hoàn thành
-                    </div>
-
-                    <div class="h3 fw-bold text-success mb-0">
-                        {{ completed_revenue }}đ
-                    </div>
-                </div>
-            </article>
-        </div>
-    </div>
-
-    <!-- Danh sách đơn -->
-    <div class="d-flex justify-content-between mb-3">
-        <h2 class="h4 fw-bold">
-            Đơn hàng gần đây
-        </h2>
-
-        <span class="text-muted">
-            Hiển thị tối đa 30 đơn
-        </span>
-    </div>
-
-    <div class="row g-3">
-        {% for order in orders %}
-            <div class="col-12 col-lg-6 col-xl-4">
-                <article class="card border-0 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column">
-                        <div
-                            class="d-flex justify-content-between align-items-start gap-3"
-                        >
-                            <div>
-                                <h3 class="h5 mb-1">
-                                    {{ order.order_code }}
-                                </h3>
-
-                                <div class="small text-muted">
-                                    {{ order.created_at|date:"H:i d/m/Y" }}
-                                </div>
-                            </div>
-
-                            {% if order.status == "PENDING" %}
-                                <span class="badge text-bg-warning">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% elif order.status == "CONFIRMED" %}
-                                <span class="badge text-bg-info">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% elif order.status == "PREPARING" %}
-                                <span class="badge text-bg-primary">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% elif order.status == "READY" %}
-                                <span class="badge text-bg-success">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% elif order.status == "DELIVERING" %}
-                                <span class="badge text-bg-secondary">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% elif order.status == "COMPLETED" %}
-                                <span class="badge text-bg-success">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% else %}
-                                <span class="badge text-bg-danger">
-                                    {{ order.get_status_display }}
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        <hr>
-
-                        <p class="mb-1">
-                            <strong>
-                                {{ order.customer_name }}
-                            </strong>
-                        </p>
-
-                        <p class="mb-1">
-                            {{ order.customer_phone }}
-                        </p>
-
-                        <p class="text-muted small mb-3">
-                            {{ order.shipping_address|truncatechars:80 }}
-                        </p>
-
-                        <div class="mb-3">
-                            {% for item in order.items.all|slice:":3" %}
-                                <div class="small">
-                                    {{ item.quantity }} ×
-                                    {{ item.product_name }}
-                                </div>
-                            {% endfor %}
-
-                            {% if order.items.count > 3 %}
-                                <div class="small text-muted">
-                                    Và sản phẩm khác...
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div
-                            class="d-flex justify-content-between align-items-center mt-auto"
-                        >
-                            <strong class="fs-5">
-                                {{ order.total }}đ
-                            </strong>
-
-                            <a
-                                href="{% url 'orders:staff-detail' order.id %}"
-                                class="btn btn-outline-secondary"
-                            >
-                                Xử lý đơn
-                            </a>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        {% empty %}
-            <div class="col-12">
-                <div class="alert alert-light border">
-                    Chưa có đơn hàng.
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-</section>
+        <section class="admin-panel"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 fw-bold mb-1">Đơn hàng gần đây</h2><span class="text-muted small">30 đơn mới nhất trong hệ thống</span></div><a href="{% url 'orders:staff-list' %}" class="btn btn-soft btn-sm">Xem tất cả</a></div><div class="table-responsive"><table class="table admin-table align-middle mb-0"><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Thời gian</th><th>Giá trị</th><th>Trạng thái</th><th></th></tr></thead><tbody>{% for order in orders|slice:":8" %}<tr><td><strong>{{ order.order_code }}</strong></td><td>{{ order.customer_name }}<small>{{ order.customer_phone }}</small></td><td>{{ order.created_at|date:"H:i d/m" }}</td><td><strong>{{ order.total }}₫</strong></td><td><span class="order-status status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td><td><a href="{% url 'orders:staff-detail' order.id %}" class="btn btn-sm btn-light"><i class="bi bi-arrow-right"></i></a></td></tr>{% empty %}<tr><td colspan="6" class="text-center py-5 text-muted">Chưa có đơn hàng.</td></tr>{% endfor %}</tbody></table></div></section>
+    </main>
+</div>
 {% endblock %}

@@ -171,4 +171,6 @@ def remove_cart_item_view(
         "Đã xóa sản phẩm khỏi giỏ hàng.",
     )
 
+    if request.POST.get("buy_now"):
+        return redirect("orders:checkout")
     return redirect("cart:detail")

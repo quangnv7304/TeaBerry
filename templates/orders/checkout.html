@@ -5,7 +5,14 @@
 {% endblock %}
 
 {% block content %}
-<section class="container py-5">
+<section class="container py-5 page-enter checkout-page">
+    <div class="checkout-progress mb-5">
+        <div class="progress-step done"><span><i class="bi bi-check-lg"></i></span><small>Giỏ hàng</small></div>
+        <div class="progress-line active"></div>
+        <div class="progress-step active"><span>2</span><small>Thông tin</small></div>
+        <div class="progress-line"></div>
+        <div class="progress-step"><span>3</span><small>Xác nhận</small></div>
+    </div>
     <div class="mb-4">
         <h1 class="fw-bold">
             Thanh toán

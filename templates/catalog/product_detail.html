@@ -143,13 +143,26 @@
                     <input id="quantity" name="quantity" class="form-control" type="number"
                            min="1" max="50" value="1" required>
                 </div>
-                <button type="submit" class="btn btn-teaberry btn-lg w-100">
-                    Thêm vào giỏ – <span id="add-to-cart-price">{{ product.base_price }}</span>đ
-                </button>
+                <div class="d-grid d-sm-flex gap-2 product-buy-actions">
+                    <button type="submit" class="btn btn-teaberry btn-lg flex-grow-1">
+                        <i class="bi bi-bag-plus me-2"></i>Thêm vào giỏ – <span id="add-to-cart-price">{{ product.base_price }}</span>đ
+                    </button>
+                    <button type="submit" name="buy_now" value="1" class="btn btn-dark btn-lg px-4">
+                        Mua ngay
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </section>
+
+{% if related_products %}
+<section class="container pb-5">
+    <div class="section-kicker mb-2">Có thể bạn sẽ thích</div>
+    <h2 class="section-title mb-4">Sản phẩm liên quan</h2>
+    <div class="row g-4">{% for product in related_products %}{% include "catalog/_product_card.html" %}{% endfor %}</div>
+</section>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

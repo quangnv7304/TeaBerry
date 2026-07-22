@@ -1,75 +1,78 @@
 {% extends "base.html" %}
 
-{% block title %}Menu đồ uống – TeaBerry{% endblock %}
+{% block title %}TeaBerry – Trà tươi, niềm vui mới{% endblock %}
 
 {% block content %}
-<section class="menu-hero">
-    <div class="container">
-        <div class="hero-panel">
-            <i class="bi bi-cup-straw hero-berry" aria-hidden="true"></i>
-            <div class="hero-content">
-                <div class="eyebrow"><i class="bi bi-flower1 me-2"></i>TeaBerry Signature</div>
-                <h1 class="hero-title">Vị tươi đánh thức <em>niềm vui.</em></h1>
-                <p class="hero-text">Trà thơm, trái cây tươi và những lớp topping vui miệng — mỗi ly được pha riêng cho khoảnh khắc của bạn.</p>
-                <div class="hero-chips">
-                    <span class="hero-chip"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Pha mới khi đặt</span>
-                    <span class="hero-chip"><i class="bi bi-leaf-fill text-success me-1"></i>Nguyên liệu chọn lọc</span>
-                    <span class="hero-chip"><i class="bi bi-heart-fill text-danger me-1"></i>Tùy chọn theo gu</span>
+<div class="page-enter">
+    <section class="menu-hero">
+        <div class="container">
+            <div class="hero-panel has-photo">
+                <div class="hero-content">
+                    <div class="eyebrow"><i class="bi bi-flower1 me-2"></i>TeaBerry Signature</div>
+                    <h1 class="hero-title">Tươi trong từng ngụm, <em>vui trong từng ngày.</em></h1>
+                    <p class="hero-text">Trà thơm, trái cây tươi và topping vui miệng. Mỗi ly được pha riêng theo đúng khẩu vị của bạn.</p>
+                    <div class="hero-actions">
+                        <a class="btn btn-teaberry btn-lg px-4" href="#menu">Đặt ngay <i class="bi bi-arrow-right ms-2"></i></a>
+                        <a class="btn btn-soft btn-lg px-4" href="{% url 'orders:track' %}"><i class="bi bi-geo-alt me-2"></i>Theo dõi đơn</a>
+                    </div>
+                    <div class="hero-chips">
+                        <span class="hero-chip"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Pha mới khi đặt</span>
+                        <span class="hero-chip"><i class="bi bi-leaf-fill text-success me-1"></i>Nguyên liệu chọn lọc</span>
+                        <span class="hero-chip"><i class="bi bi-heart-fill text-danger me-1"></i>Tùy chọn theo gu</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="container pb-5" id="menu">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
-        <div>
-            <div class="section-kicker mb-2">Khám phá thực đơn</div>
-            <h2 class="section-title mb-0">Chọn món bạn thích</h2>
+    <section class="container pb-5">
+        <div class="text-center mb-4">
+            <div class="section-kicker mb-2">Bạn đang muốn uống gì?</div>
+            <h2 class="section-title mb-0">Khám phá theo danh mục</h2>
         </div>
-        <p class="text-muted mb-1">Một ly ngon đang chờ bạn.</p>
-    </div>
+        <div class="category-strip">
+            <a class="category-tile {% if not current_category %}active{% endif %}" href="{% url 'catalog:product-list' %}#menu"><span class="category-icon">✨</span><span>Tất cả</span></a>
+            <a class="category-tile" href="?q=trà+sữa#menu"><span class="category-icon">🧋</span><span>Trà sữa</span></a>
+            <a class="category-tile" href="?q=trà+trái+cây#menu"><span class="category-icon">🍓</span><span>Trà trái cây</span></a>
+            <a class="category-tile" href="?q=nước+ép#menu"><span class="category-icon">🍊</span><span>Nước ép</span></a>
+            <a class="category-tile" href="?q=bánh#menu"><span class="category-icon">🍰</span><span>Bánh ngọt & Combo</span></a>
+        </div>
+    </section>
 
-    <div class="row g-4">
-        {% for product in products %}
-            <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                <article class="card product-card h-100 overflow-hidden">
-                    <a class="product-media d-block" href="{% url 'catalog:product-detail' product.slug %}" aria-label="Xem {{ product.name }}">
-                        {% if product.image %}
-                            <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}" loading="lazy">
-                        {% else %}
-                            <div class="product-image-placeholder d-flex align-items-center justify-content-center"><i class="bi bi-cup-straw" aria-hidden="true"></i></div>
-                        {% endif %}
-                        {% if product.is_featured %}<span class="featured-pill"><i class="bi bi-stars me-1"></i>Nổi bật</span>{% endif %}
-                    </a>
-                    <div class="card-body d-flex flex-column p-4">
-                        <div class="category-label mb-2">{{ product.category.name }}</div>
-                        <h3 class="product-name mb-2">{{ product.name }}</h3>
-                        <p class="product-description flex-grow-1 mb-3">{{ product.short_description|default:"Một món ngon được pha mới tại TeaBerry." }}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="product-price">{{ product.base_price }}₫</span>
-                            <a class="product-action" href="{% url 'catalog:product-detail' product.slug %}" aria-label="Chọn {{ product.name }}"><i class="bi bi-arrow-up-right"></i></a>
-                        </div>
-                    </div>
-                </article>
-            </div>
-        {% empty %}
-            <div class="col-12 text-center py-5">
-                <div class="product-image-placeholder rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:100px;height:100px"><i class="bi bi-cup-straw"></i></div>
-                <h3 class="h5">Menu đang được chuẩn bị</h3>
-                <p class="text-muted">TeaBerry sẽ sớm mang những món thật ngon đến bạn.</p>
-            </div>
-        {% endfor %}
-    </div>
-
-    {% if is_paginated %}
-        <nav class="mt-5" aria-label="Phân trang sản phẩm">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-arrow-left me-1"></i>Trước</a></li>{% endif %}
-                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
-                {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Sau<i class="bi bi-arrow-right ms-1"></i></a></li>{% endif %}
-            </ul>
-        </nav>
+    {% if featured_products and not current_query and not current_category %}
+    <section class="container py-5">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div><div class="section-kicker mb-2">Best seller</div><h2 class="section-title mb-0">Sản phẩm nổi bật</h2></div>
+            <a class="text-decoration-none fw-semibold text-danger" href="#menu">Xem tất cả <i class="bi bi-arrow-down"></i></a>
+        </div>
+        <div class="row g-4">
+            {% for product in featured_products %}{% include "catalog/_product_card.html" %}{% endfor %}
+        </div>
+    </section>
     {% endif %}
-</section>
+
+    <section class="container py-5" id="menu">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+            <div><div class="section-kicker mb-2">Thực đơn TeaBerry</div><h2 class="section-title mb-0">Chọn món bạn thích</h2></div>
+            <span class="text-muted small">{{ page_obj.paginator.count }} sản phẩm phù hợp</span>
+        </div>
+
+        <form class="filter-bar row g-2 align-items-center mb-4" method="get">
+            <div class="col-12 col-lg-4"><div class="input-group"><span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span><input class="form-control border-start-0" name="q" value="{{ current_query }}" placeholder="Tìm trà sữa, topping..."></div></div>
+            <div class="col-6 col-lg-2"><select class="form-select" name="category"><option value="">Mọi danh mục</option>{% for category in categories %}<option value="{{ category.slug }}" {% if current_category == category.slug %}selected{% endif %}>{{ category.name }}</option>{% endfor %}</select></div>
+            <div class="col-6 col-lg-2"><select class="form-select" name="sort"><option value="featured" {% if current_sort == "featured" %}selected{% endif %}>Nổi bật</option><option value="popular" {% if current_sort == "popular" %}selected{% endif %}>Phổ biến</option><option value="newest" {% if current_sort == "newest" %}selected{% endif %}>Mới nhất</option><option value="price_low" {% if current_sort == "price_low" %}selected{% endif %}>Giá thấp trước</option><option value="price_high" {% if current_sort == "price_high" %}selected{% endif %}>Giá cao trước</option></select></div>
+            <div class="col-6 col-lg-1"><input class="form-control" type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Giá từ"></div>
+            <div class="col-6 col-lg-1"><input class="form-control" type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Đến"></div>
+            <div class="col-12 col-lg-2 d-grid"><button class="btn btn-teaberry" type="submit">Áp dụng bộ lọc</button></div>
+        </form>
+
+        <div class="row g-4">
+            {% for product in products %}{% include "catalog/_product_card.html" %}{% empty %}
+                <div class="col-12 text-center py-5"><div class="product-image-placeholder rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width:100px;height:100px"><i class="bi bi-search"></i></div><h3 class="h5">Không tìm thấy món phù hợp</h3><p class="text-muted">Hãy thử từ khóa hoặc khoảng giá khác nhé.</p><a href="{% url 'catalog:product-list' %}#menu" class="btn btn-soft">Xóa bộ lọc</a></div>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}<nav class="mt-5" aria-label="Phân trang"><ul class="pagination justify-content-center">{% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?q={{ current_query }}&category={{ current_category }}&sort={{ current_sort }}&page={{ page_obj.previous_page_number }}">Trước</a></li>{% endif %}<li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>{% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?q={{ current_query }}&category={{ current_category }}&sort={{ current_sort }}&page={{ page_obj.next_page_number }}">Sau</a></li>{% endif %}</ul></nav>{% endif %}
+    </section>
+</div>
 {% endblock %}
