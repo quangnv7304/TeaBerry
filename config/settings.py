@@ -275,3 +275,8 @@ LOGGING = {
         },
     },
 }
+
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard:home"
+LOGOUT_REDIRECT_URL = "/"
