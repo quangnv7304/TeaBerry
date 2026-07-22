@@ -36,7 +36,6 @@ urlpatterns = [
         name="health-check",
     ),
     path("admin/", admin.site.urls),
-    path("", include("apps.catalog.urls")),
     path("products/", include("apps.catalog.urls")),
     path("cart/", include("apps.cart.urls")),
     path(
@@ -80,6 +79,9 @@ urlpatterns = [
         "loyalty/",
         include("apps.loyalty.urls"),
     ),
+    # Keep the catalog slug routes last. Otherwise ``/<slug>/`` captures
+    # prefixes such as /dashboard/ before their URLconfs can resolve them.
+    path("", include("apps.catalog.urls")),
 ]
 
 if settings.DEBUG:
