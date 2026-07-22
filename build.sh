@@ -1,28 +1,25 @@
-#!/usr/bin/env bash
-set -o errexit
-
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-
-python manage.py migrate
-
-python manage.py shell <<EOF
+python manage.py shell <<'EOF'
+import os
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-email = "quangvoka732004@gmail.com"
-password = "teaberry2026"
+email = os.environ["DJANGO_SUPERUSER_EMAIL"].strip().lower()
+password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
 
-if not User.objects.filter(email=email).exists():
+user = User.objects.filter(email__iexact=email).first()
+
+if user:
+    user.is_active = True
+    user.is_staff = True
+    user.is_superuser = True
+    user.set_password(password)
+    user.save()
+    print("Existing account updated to superuser.")
+else:
     User.objects.create_superuser(
-        username="admin",
         email=email,
         password=password,
     )
-    print("Superuser created.")
-else:
-    print("Superuser already exists.")
+    print("New superuser created.")
 EOF
-
-python manage.py collectstatic --noinput
