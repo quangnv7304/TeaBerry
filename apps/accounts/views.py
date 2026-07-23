@@ -1,6 +1,13 @@
 from django.contrib import messages
-from django.contrib.auth import login
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.views import (
+    LoginView,
+    LogoutView,
+    PasswordResetCompleteView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+    PasswordResetView,
+)
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods
@@ -14,6 +21,9 @@ from .forms import (
     AddressForm,
     CustomerRegisterForm,
     TeaBerryLoginForm,
+    TeaBerryPasswordChangeForm,
+    TeaBerryPasswordResetForm,
+    TeaBerrySetPasswordForm,
 )
 from .models import Address
 from .services import save_address, set_default_address
@@ -57,6 +67,29 @@ class TeaBerryLoginView(LoginView):
             return reverse_lazy("dashboard:home")
 
         return reverse_lazy("catalog:product-list")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def password_change_view(request):
+    form = TeaBerryPasswordChangeForm(
+        user=request.user,
+        data=request.POST or None,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        messages.success(request, "Đổi mật khẩu thành công.")
+        return redirect("accounts:password-change")
+
+    return render(
+        request,
+        "accounts/password_change.html",
+        {"form": form},
+    )
+
+
 @require_http_methods(["GET", "POST"])
 def register_view(request):
     if request.user.is_authenticated:
@@ -280,3 +313,25 @@ def address_delete_view(
 
 class TeaBerryLogoutView(LogoutView):
     next_page = reverse_lazy("catalog:product-list")
+
+
+class TeaBerryPasswordResetView(PasswordResetView):
+    template_name = "accounts/password_reset_form.html"
+    email_template_name = "accounts/password_reset_email.txt"
+    subject_template_name = "accounts/password_reset_subject.txt"
+    form_class = TeaBerryPasswordResetForm
+    success_url = reverse_lazy("accounts:password-reset-done")
+
+
+class TeaBerryPasswordResetDoneView(PasswordResetDoneView):
+    template_name = "accounts/password_reset_done.html"
+
+
+class TeaBerryPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = "accounts/password_reset_confirm.html"
+    form_class = TeaBerrySetPasswordForm
+    success_url = reverse_lazy("accounts:password-reset-complete")
+
+
+class TeaBerryPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = "accounts/password_reset_complete.html"

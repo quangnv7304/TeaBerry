@@ -1,7 +1,14 @@
 from django.urls import path
 
 from . import views
-from .views import TeaBerryLoginView, TeaBerryLogoutView
+from .views import (
+    TeaBerryLoginView,
+    TeaBerryLogoutView,
+    TeaBerryPasswordResetCompleteView,
+    TeaBerryPasswordResetConfirmView,
+    TeaBerryPasswordResetDoneView,
+    TeaBerryPasswordResetView,
+)
 
 app_name = "accounts"
 
@@ -25,6 +32,31 @@ urlpatterns = [
         "logout/",
         TeaBerryLogoutView.as_view(),
         name="logout",
+    ),
+    path(
+        "password/change/",
+        views.password_change_view,
+        name="password-change",
+    ),
+    path(
+        "password/reset/",
+        TeaBerryPasswordResetView.as_view(),
+        name="password-reset",
+    ),
+    path(
+        "password/reset/done/",
+        TeaBerryPasswordResetDoneView.as_view(),
+        name="password-reset-done",
+    ),
+    path(
+        "password/reset/<uidb64>/<token>/",
+        TeaBerryPasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
+    path(
+        "password/reset/complete/",
+        TeaBerryPasswordResetCompleteView.as_view(),
+        name="password-reset-complete",
     ),
     path(
     "addresses/",

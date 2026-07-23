@@ -72,6 +72,12 @@
                             {{ error }}
                         </div>
                     {% endfor %}
+
+                    <div class="text-end mt-2">
+                        <a href="{% url 'accounts:password-reset' %}">
+                            Quên mật khẩu?
+                        </a>
+                    </div>
                 </div>
 
                 <button
@@ -81,6 +87,11 @@
                     Đăng nhập
                 </button>
             </form>
+
+            <p class="text-center mt-4 mb-0">
+                Chưa có tài khoản?
+                <a href="{% url 'accounts:register' %}">Đăng ký</a>
+            </p>
         </div>
     </div>
 </section>

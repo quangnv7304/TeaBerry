@@ -178,6 +178,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:password-change' %}">
+                                Đổi mật khẩu
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <span class="nav-link">
                                 {{ user.full_name|default:user.email }}
                             </span>
