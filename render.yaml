@@ -19,3 +19,24 @@ services:
 
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         value: https://teaberry.onrender.com
+
+      - key: DJANGO_EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+
+      - key: DJANGO_EMAIL_HOST
+        value: smtp.gmail.com
+
+      - key: DJANGO_EMAIL_PORT
+        value: "587"
+
+      - key: DJANGO_EMAIL_USE_TLS
+        value: "True"
+
+      - key: DJANGO_EMAIL_HOST_USER
+        value: quangnguyen03251@gmail.com
+
+      - key: DJANGO_EMAIL_HOST_PASSWORD
+        sync: false
+
+      - key: DJANGO_DEFAULT_FROM_EMAIL
+        value: TeaBerry <quangnguyen03251@gmail.com>
